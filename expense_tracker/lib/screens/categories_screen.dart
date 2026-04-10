@@ -1,0 +1,172 @@
+import 'package:flutter/material.dart';
+import '../db/database_helper.dart';
+import '../models/category.dart';
+
+class CategoriesScreen extends StatefulWidget {
+  const CategoriesScreen({super.key});
+
+  @override
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen> {
+  List<Category> _categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final cats = await DatabaseHelper.instance.getAllCategories();
+    setState(() => _categories = cats);
+  }
+
+  void _showCategoryDialog({Category? existing}) {
+  final nameController =
+      TextEditingController(text: existing?.name ?? '');
+  final descController =
+      TextEditingController(text: existing?.description ?? '');
+
+  // Save the messenger BEFORE opening the dialog, using the screen's context
+  final messenger = ScaffoldMessenger.of(context);
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(existing == null ? 'New Category' : 'Edit Category'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Name *',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: descController,
+            decoration: const InputDecoration(
+              labelText: 'Description (optional)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final name = nameController.text.trim();
+            if (name.isEmpty) {
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Name is required')),
+              );
+              return;
+            }
+            final category = Category(
+              id: existing?.id,
+              name: name,
+              description: descController.text.trim().isEmpty
+                  ? null
+                  : descController.text.trim(),
+            );
+            if (existing == null) {
+              await DatabaseHelper.instance.insertCategory(category);
+            } else {
+              await DatabaseHelper.instance.updateCategory(category);
+            }
+            Navigator.pop(ctx);
+            _loadCategories();
+          },
+          child: Text(existing == null ? 'Add' : 'Save'),
+        ),
+      ],
+    ),
+  );
+}
+
+  void _deleteCategory(Category category) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Category'),
+        content: Text('Delete "${category.name}"?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete',
+                  style: TextStyle(color: Colors.white))),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await DatabaseHelper.instance.deleteCategory(category.id!);
+      _loadCategories();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Categories'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: _categories.isEmpty
+          ? const Center(
+              child: Text('No categories yet.\nTap + to add one.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey)),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(12),
+              itemCount: _categories.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (ctx, i) {
+                final cat = _categories[i];
+                return Card(
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                        child: Icon(Icons.label_outline)),
+                    title: Text(cat.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: cat.description != null
+                        ? Text(cat.description!)
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.indigo),
+                          onPressed: () =>
+                              _showCategoryDialog(existing: cat),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _deleteCategory(cat),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCategoryDialog(),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
