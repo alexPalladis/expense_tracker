@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
+import '../utils/category_style.dart';
 import 'add_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -53,28 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Color _categoryColor(int index) {
-    final colors = [
-      const Color(0xFFEEF0FF),
-      const Color(0xFFE8F5E9),
-      const Color(0xFFFFF3E0),
-      const Color(0xFFFCE4EC),
-      const Color(0xFFE0F7FA),
-    ];
-    return colors[index % colors.length];
-  }
-
-  IconData _categoryIcon(int index) {
-    final icons = [
-      Icons.shopping_cart_outlined,
-      Icons.directions_bus_outlined,
-      Icons.coffee_outlined,
-      Icons.restaurant_outlined,
-      Icons.label_outline,
-    ];
-    return icons[index % icons.length];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,58 +61,56 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: _loadData,
         child: CustomScrollView(
           slivers: [
-            // ── Custom SliverAppBar ──
             SliverAppBar(
-  expandedHeight: 150,
-  pinned: true,
-  backgroundColor: const Color(0xFF3949AB),
-  title: const Text(
-    'Expense Tracker',
-    style: TextStyle(
-        color: Colors.white,
-        fontSize: 18,
-        fontWeight: FontWeight.bold),
-  ),
-  iconTheme: const IconThemeData(color: Colors.white),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.bar_chart, color: Colors.white),
-      onPressed: () {},
-    ),
-  ],
-  flexibleSpace: FlexibleSpaceBar(
-    background: Container(
-      color: const Color(0xFF3949AB),
-      padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _SummaryCard(
-              label: 'ΤΡΕΧΟΝ ΜΗΝΑΣ',
-              value: '€${_monthTotal.toStringAsFixed(2)}',
+              expandedHeight: 150,
+              pinned: true,
+              backgroundColor: const Color(0xFF3949AB),
+              title: const Text(
+                'Expense Tracker',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+              ),
+              iconTheme: const IconThemeData(color: Colors.white),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.bar_chart, color: Colors.white),
+                  onPressed: () {},
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  color: const Color(0xFF3949AB),
+                  padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _SummaryCard(
+                          label: 'ΤΡΕΧΟΝ ΜΗΝΑΣ',
+                          value: '€${_monthTotal.toStringAsFixed(2)}',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _SummaryCard(
+                          label: 'ΣΗΜΕΡΑ',
+                          value: '€${_todayTotal.toStringAsFixed(2)}',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _SummaryCard(
-              label: 'ΣΗΜΕΡΑ',
-              value: '€${_todayTotal.toStringAsFixed(2)}',
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-),
 
-            // ── Recent Expenses ──
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('ΠΡOΣΦΑΤΑ ΕΞΟΔΑ',
+                    const Text('ΠΡΟΣΦΑΤΑ ΕΞΟΔΑ',
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -175,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       (ctx, i) {
                         final e = _recent[i];
                         final date = DateTime.parse(e.date);
+                        final style = getCategoryStyle(_categoryName(e.categoryId));
                         return Padding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                           child: Container(
@@ -196,10 +174,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 42,
                                 height: 42,
                                 decoration: BoxDecoration(
-                                  color: _categoryColor(i),
+                                  color: style.color,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Icon(_categoryIcon(i),
+                                child: Icon(style.icon,
                                     color: const Color(0xFF3949AB), size: 20),
                               ),
                               title: Text(
@@ -233,17 +211,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-  backgroundColor: const Color(0xFF3949AB),
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(16),
-  ),
-  onPressed: () async {
-    await Navigator.push(context,
-        MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
-    _loadData();
-  },
-  child: const Icon(Icons.add, color: Colors.white),
-),
+        backgroundColor: const Color(0xFF3949AB),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        onPressed: () async {
+          await Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
+          _loadData();
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }

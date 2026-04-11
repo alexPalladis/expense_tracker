@@ -69,9 +69,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ανάλυση'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
+  title: const Text('Ανάλυση',
+      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+  backgroundColor: const Color(0xFF3949AB),
+  foregroundColor: Colors.white,
+  iconTheme: const IconThemeData(color: Colors.white),
+  centerTitle: true
+),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -152,7 +156,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         const SizedBox(height: 4),
-                        Text('${(percent * 100).toStringAsFixed(1)}% of total',
+                        Text('${(percent * 100).toStringAsFixed(1)}% επί του συνόλου',
                             style: const TextStyle(
                                 color: Colors.grey, fontSize: 12)),
                       ],

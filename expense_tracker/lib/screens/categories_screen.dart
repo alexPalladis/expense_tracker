@@ -121,9 +121,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Κατηγορίες'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
+  title: const Text('Κατηγορίες',
+      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+  backgroundColor: const Color(0xFF3949AB),
+  foregroundColor: Colors.white,
+  iconTheme: const IconThemeData(color: Colors.white),
+  centerTitle: true
+),
       body: _categories.isEmpty
           ? const Center(
               child: Text('Καμία κατηγορία ακόμα.\nΠιέστε + για να προσθέσετε μία.',

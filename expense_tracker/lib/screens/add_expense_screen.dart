@@ -140,10 +140,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(widget.existing == null ? 'Προσθήκη' : 'Επεξεργσία'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
+  title: Text(
+    widget.existing == null ? 'Προσθήκη Εξόδου' : 'Επεξεργασία Εξόδου',
+    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+  ),
+  backgroundColor: const Color(0xFF3949AB),
+  foregroundColor: Colors.white,
+  iconTheme: const IconThemeData(color: Colors.white),
+),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
