@@ -114,12 +114,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Expenses'),
+        title: const Text('Έξοδα'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: _expenses.isEmpty
           ? const Center(
-              child: Text('No expenses yet.\nGo to Add to record one.',
+              child: Text('Δεν υπάρχουν έξοδα ακόμη.\nΠροσθέστε ένα.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, color: Colors.grey)),
             )

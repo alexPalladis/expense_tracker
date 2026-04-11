@@ -42,7 +42,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
     if (_endDate!.isBefore(_startDate!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('End date must be after start date')));
+          const SnackBar(content: Text('Η ημερομηνία λήξης πρέπει να είναι μετά την ημερομηνία έναρξης')));
       return;
     }
 
@@ -69,7 +69,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analysis'),
+        title: const Text('Ανάλυση'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
@@ -83,7 +83,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
-                      _startDate == null ? 'Start date' : _fmt(_startDate!)),
+                      _startDate == null ? 'Ημ/νία έναρξης' : _fmt(_startDate!)),
                   onPressed: _pickStart,
                 ),
               ),
@@ -92,7 +92,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
-                      _endDate == null ? 'End date' : _fmt(_endDate!)),
+                      _endDate == null ? 'Ημ/νία λήξης' : _fmt(_endDate!)),
                   onPressed: _pickEnd,
                 ),
               ),
@@ -102,7 +102,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.bar_chart),
-                label: const Text('Analyze'),
+                label: const Text('Ανάλυση'),
                 style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14)),
                 onPressed: _analyze,
@@ -113,7 +113,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             // Results
             if (_searched && _results.isEmpty)
               const Center(
-                  child: Text('No expenses found for this period.',
+                  child: Text('Δε βρέθηκαν έξοδα για αυτή την περίοδο.',
                       style: TextStyle(color: Colors.grey))),
 
             if (_results.isNotEmpty) ...[

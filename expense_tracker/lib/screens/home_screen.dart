@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: _SummaryCard(
-              label: 'ΑΥΤΟΝ ΤΟΝ ΜΗΝΑ',
+              label: 'ΤΡΕΧΟΝ ΜΗΝΑΣ',
               value: '€${_monthTotal.toStringAsFixed(2)}',
             ),
           ),
@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Text('Δεν υπάρχουν έξοδα ακόμα.',
                                 style: TextStyle(color: Colors.grey)),
                             const SizedBox(height: 8),
-                            const Text('Πάτα + για να προσθέσεις ένα.',
+                            const Text('Πιέστε + για να προσθέσετε ένα.',
                                 style: TextStyle(
                                     color: Colors.grey, fontSize: 13)),
                           ],
@@ -233,14 +233,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF3949AB),
-        onPressed: () async {
-          await Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
-          _loadData();
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+  backgroundColor: const Color(0xFF3949AB),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(16),
+  ),
+  onPressed: () async {
+    await Navigator.push(context,
+        MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
+    _loadData();
+  },
+  child: const Icon(Icons.add, color: Colors.white),
+),
     );
   }
 }
@@ -253,7 +256,7 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
@@ -264,13 +267,13 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(label,
               style: const TextStyle(
-                  fontSize: 9,
+                  fontSize: 8,
                   color: Colors.white70,
                   letterSpacing: 0.5)),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(value,
               style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
         ],

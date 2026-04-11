@@ -35,14 +35,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(existing == null ? 'New Category' : 'Edit Category'),
+      title: Text(existing == null ? 'Νέα κατηγορία' : 'Επεξεργασία κατηγορίας'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: nameController,
             decoration: const InputDecoration(
-              labelText: 'Name *',
+              labelText: 'Ονομασία *',
               border: OutlineInputBorder(),
             ),
           ),
@@ -50,7 +50,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           TextField(
             controller: descController,
             decoration: const InputDecoration(
-              labelText: 'Description (optional)',
+              labelText: 'Περιγραφή (προαιρετική)',
               border: OutlineInputBorder(),
             ),
           ),
@@ -59,14 +59,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Cancel'),
+          child: const Text('Ακύρωση'),
         ),
         ElevatedButton(
           onPressed: () async {
             final name = nameController.text.trim();
             if (name.isEmpty) {
               messenger.showSnackBar(
-                const SnackBar(content: Text('Name is required')),
+                const SnackBar(content: Text('Η ονομασία είναι υποχρεωτική')),
               );
               return;
             }
@@ -85,7 +85,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             Navigator.pop(ctx);
             _loadCategories();
           },
-          child: Text(existing == null ? 'Add' : 'Save'),
+          child: Text(existing == null ? 'Προσθήκη' : 'Αποθήκευση'),
         ),
       ],
     ),
@@ -97,11 +97,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Category'),
-        content: Text('Delete "${category.name}"?'),
+        content: Text('Διαγραφή "${category.name}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: const Text('Ακύρωση')),
           ElevatedButton(
               style:
                   ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -121,12 +121,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories'),
+        title: const Text('Κατηγορίες'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: _categories.isEmpty
           ? const Center(
-              child: Text('No categories yet.\nTap + to add one.',
+              child: Text('Καμία κατηγορία ακόμα.\nΠιέστε + για να προσθέσετε μία.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, color: Colors.grey)),
             )

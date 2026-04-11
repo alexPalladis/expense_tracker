@@ -65,7 +65,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       }
       if (permission == LocationPermission.deniedForever) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Location permission permanently denied.')));
+            content: Text('Η άδεια τοποθεσίας απορρίφθηκε.')));
         setState(() => _loadingLocation = false);
         return;
       }
@@ -79,7 +79,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     } catch (e) {
       setState(() => _loadingLocation = false);
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not get location: $e')));
+          SnackBar(content: Text('Δεν ανακτήθηκε τοποθεσία: $e')));
     }
   }
 
@@ -97,18 +97,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     // Validation
     if (_amountController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Amount is required')));
+          const SnackBar(content: Text('Απαιτείται ποσό')));
       return;
     }
     final amount = double.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Enter a valid amount')));
+          const SnackBar(content: Text('Εισάγετε έγκυρο ποσό')));
       return;
     }
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a category')));
+          const SnackBar(content: Text('Επιλέξτε κατηγορία')));
       return;
     }
 
@@ -141,7 +141,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Scaffold(
       appBar: AppBar(
         title:
-            Text(widget.existing == null ? 'Add Expense' : 'Edit Expense'),
+            Text(widget.existing == null ? 'Προσθήκη' : 'Επεξεργσία'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
@@ -155,7 +155,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
-                labelText: 'Amount (€) *',
+                labelText: 'Ποσό (€) *',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.euro),
               ),
@@ -166,7 +166,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             TextField(
               controller: _descController,
               decoration: const InputDecoration(
-                labelText: 'Description (optional)',
+                labelText: 'Περιγραφή (προαιρετική)',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.notes),
               ),
@@ -177,7 +177,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             _categories.isEmpty
                 ? ElevatedButton.icon(
                     icon: const Icon(Icons.add),
-                    label: const Text('Create a category first'),
+                    label: const Text('Δημιουργήστε μία κατηγορία πρώτα'),
                     onPressed: () async {
                       await Navigator.push(
                           context,
@@ -189,7 +189,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 : DropdownButtonFormField<Category>(
                     value: _selectedCategory,
                     decoration: const InputDecoration(
-                      labelText: 'Category *',
+                      labelText: 'Κατηγορία *',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.label_outline),
                     ),
@@ -206,16 +206,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_today, color: Colors.indigo),
-              title: const Text('Date'),
+              title: const Text('Ημερομηνία'),
               subtitle: Text(
                   '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}  ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}'),
               trailing: TextButton(
-                  onPressed: _pickDate, child: const Text('Change')),
+                  onPressed: _pickDate, child: const Text('Αλλαγή')),
             ),
             const Divider(),
 
             // Location
-            const Text('Location',
+            const Text('Τοποθεσία',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
             ElevatedButton.icon(
@@ -226,10 +226,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.my_location),
               label: Text(_loadingLocation
-                  ? 'Getting location...'
+                  ? 'Ανάκτηση τοποθεσίας...'
                   : _latitude != null
-                      ? 'Location captured'
-                      : 'Capture my location'),
+                      ? 'Τοποθεσία ανακτήθηκε'
+                      : 'Ανάκτηση τοποθεσίας'),
               onPressed: _loadingLocation ? null : _getLocation,
             ),
             if (_latitude != null) ...[
@@ -241,7 +241,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               TextField(
                 controller: _locationNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Location name (optional)',
+                  labelText: 'Ονομασία Τοποθεσίας (προαιρετική)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.place),
                 ),
@@ -255,8 +255,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.save),
                 label: Text(widget.existing == null
-                    ? 'Save Expense'
-                    : 'Update Expense'),
+                    ? 'Αποθήκευση'
+                    : 'Ενημέρωση'),
                 style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16)),
                 onPressed: _save,

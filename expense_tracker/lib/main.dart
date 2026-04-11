@@ -39,11 +39,16 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
-    AddExpenseScreen(),
     ExpensesScreen(),
     CategoriesScreen(),
     AnalysisScreen(),
   ];
+
+  void _openAddExpense() async {
+    await Navigator.push(
+        context, MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +63,6 @@ class _MainScreenState extends State<MainScreen> {
     return Drawer(
       child: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
             color: const Color(0xFF3949AB),
@@ -86,8 +90,6 @@ class _MainScreenState extends State<MainScreen> {
               ],
             ),
           ),
-
-          // Menu items
           const SizedBox(height: 8),
           _DrawerItem(
             icon: Icons.home_outlined,
@@ -98,30 +100,28 @@ class _MainScreenState extends State<MainScreen> {
           _DrawerItem(
             icon: Icons.add_circle_outline,
             label: 'Προσθήκη Εξόδου',
-            active: _currentIndex == 1,
-            onTap: () { setState(() => _currentIndex = 1); Navigator.pop(context); },
+            active: false,
+            onTap: () { Navigator.pop(context); _openAddExpense(); },
           ),
           _DrawerItem(
             icon: Icons.list_alt_outlined,
             label: 'Όλα τα Έξοδα',
-            active: _currentIndex == 2,
-            onTap: () { setState(() => _currentIndex = 2); Navigator.pop(context); },
+            active: _currentIndex == 1,
+            onTap: () { setState(() => _currentIndex = 1); Navigator.pop(context); },
           ),
           _DrawerItem(
             icon: Icons.label_outline,
             label: 'Κατηγορίες',
-            active: _currentIndex == 3,
-            onTap: () { setState(() => _currentIndex = 3); Navigator.pop(context); },
+            active: _currentIndex == 2,
+            onTap: () { setState(() => _currentIndex = 2); Navigator.pop(context); },
           ),
           _DrawerItem(
             icon: Icons.bar_chart_outlined,
             label: 'Ανάλυση',
-            active: _currentIndex == 4,
-            onTap: () { setState(() => _currentIndex = 4); Navigator.pop(context); },
+            active: _currentIndex == 3,
+            onTap: () { setState(() => _currentIndex = 3); Navigator.pop(context); },
           ),
-
           const Divider(),
-
           _DrawerItem(
             icon: Icons.info_outline,
             label: 'Σχετικά με την εφαρμογή',
@@ -136,7 +136,6 @@ class _MainScreenState extends State<MainScreen> {
               );
             },
           ),
-
           const Spacer(),
           const Padding(
             padding: EdgeInsets.all(16),
@@ -162,10 +161,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Αρχική'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            activeIcon: Icon(Icons.add_circle),
-            label: 'Προσθήκη'),
         BottomNavigationBarItem(
             icon: Icon(Icons.list_alt_outlined),
             activeIcon: Icon(Icons.list_alt),
