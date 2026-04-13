@@ -57,6 +57,42 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     return grouped;
   }
 
+  Future<bool?> _confirmDelete(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text('Διαγραφή εξόδου',
+                  style: TextStyle(fontSize: 16)),
+            ),
+          ],
+        ),
+        content: const Text(
+            'Είστε σίγουροι για τη διαγραφή αυτού του εξόδου;'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Άκυρο'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8))),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Διαγραφή'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showDetail(Expense expense) {
     final date = DateTime.parse(expense.date);
     showModalBottomSheet(
@@ -112,7 +148,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     await Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => AddExpenseScreen(existing: expense)));
+                            builder: (_) =>
+                                AddExpenseScreen(existing: expense)));
                     _loadData();
                   },
                 ),
@@ -127,8 +164,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       foregroundColor: Colors.white),
                   onPressed: () async {
                     Navigator.pop(ctx);
-                    await DatabaseHelper.instance.deleteExpense(expense.id!);
-                    _loadData();
+                    final confirm = await _confirmDelete(context);
+                    if (confirm == true) {
+                      await DatabaseHelper.instance.deleteExpense(expense.id!);
+                      _loadData();
+                    }
                   },
                 ),
               ),
@@ -150,7 +190,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF3949AB),
         foregroundColor: Colors.white,
-        centerTitle: true
+        centerTitle: true,
       ),
       body: _expenses.isEmpty
           ? Center(
@@ -201,50 +241,80 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     ),
                     ...dayExpenses.map((e) {
                       final style = getCategoryStyle(_categoryName(e.categoryId));
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Container(
+                      return Dismissible(
+                        key: Key(e.id.toString()),
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (direction) => _confirmDelete(context),
+                        onDismissed: (direction) async {
+                          await DatabaseHelper.instance.deleteExpense(e.id!);
+                          _loadData();
+                        },
+                        background: Container(
+                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Colors.red,
                             borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              )
+                          ),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.delete, color: Colors.white, size: 26),
+                              SizedBox(height: 4),
+                              Text('Διαγραφή',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
-                          child: ListTile(
-                            onTap: () => _showDetail(e),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
-                            leading: Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: style.color,
-                                borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: ListTile(
+                              onTap: () => _showDetail(e),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              leading: Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: style.color,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(style.icon,
+                                    color: const Color(0xFF3949AB), size: 20),
                               ),
-                              child: Icon(style.icon,
-                                  color: const Color(0xFF3949AB), size: 20),
-                            ),
-                            title: Text(
-                              e.description ?? _categoryName(e.categoryId),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 14),
-                            ),
-                            subtitle: Text(
-                              _categoryName(e.categoryId),
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.grey),
-                            ),
-                            trailing: Text(
-                              '€${e.amount.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Color(0xFF3949AB),
+                              title: Text(
+                                e.description ?? _categoryName(e.categoryId),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 14),
+                              ),
+                              subtitle: Text(
+                                _categoryName(e.categoryId),
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.grey),
+                              ),
+                              trailing: Text(
+                                '€${e.amount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: Color(0xFF3949AB),
+                                ),
                               ),
                             ),
                           ),
