@@ -12,6 +12,9 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   List<Category> _categories = [];
+  Map<int, int> _expenseCount = {};
+  Map<int, double> _expenseTotal = {};
+  bool _showHint = true;
 
   @override
   void initState() {
@@ -21,7 +24,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   Future<void> _loadCategories() async {
     final cats = await DatabaseHelper.instance.getAllCategories();
-    setState(() => _categories = cats);
+    final expenses = await DatabaseHelper.instance.getAllExpenses();
+
+    final Map<int, int> count = {};
+    final Map<int, double> total = {};
+    for (final e in expenses) {
+      count[e.categoryId] = (count[e.categoryId] ?? 0) + 1;
+      total[e.categoryId] = (total[e.categoryId] ?? 0) + e.amount;
+    }
+
+    setState(() {
+      _categories = cats;
+      _expenseCount = count;
+      _expenseTotal = total;
+    });
   }
 
   void _showCategoryDialog({Category? existing}) {
@@ -36,7 +52,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(existing == null ? 'Νέα κατηγορία' : 'Επεξεργασία κατηγορίας'),
+        title: Text(
+            existing == null ? 'Νέα κατηγορία' : 'Επεξεργασία κατηγορίας'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -72,7 +89,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               final name = nameController.text.trim();
               if (name.isEmpty) {
                 messenger.showSnackBar(
-                  const SnackBar(content: Text('Η ονομασία είναι υποχρεωτική')),
+                  const SnackBar(
+                      content: Text('Η ονομασία είναι υποχρεωτική')),
                 );
                 return;
               }
@@ -136,118 +154,221 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Κατηγορίες',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(
+          _categories.isEmpty
+              ? 'Κατηγορίες'
+              : 'Κατηγορίες (${_categories.length})',
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF3949AB),
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
+      floatingActionButton: _categories.isEmpty
+          ? null
+          : FloatingActionButton(
+              backgroundColor: const Color(0xFF3949AB),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              onPressed: () => _showCategoryDialog(),
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
       body: _categories.isEmpty
-          ? const Center(
-              child: Text(
-                'Καμία κατηγορία ακόμα.\nΠιέστε + για να προσθέσετε μία.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.label_off_outlined,
+                      size: 72, color: Colors.grey.shade300),
+                  const SizedBox(height: 16),
+                  const Text('Καμία κατηγορία ακόμα.',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  const Text(
+                      'Δημιουργήστε κατηγορίες για να οργανώσετε\nτα έξοδά σας.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: Colors.grey)),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Προσθήκη κατηγορίας'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3949AB),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => _showCategoryDialog(),
+                  ),
+                ],
               ),
             )
-          : ListView.separated(
-              padding: const EdgeInsets.all(12),
-              itemCount: _categories.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (ctx, i) {
-                final cat = _categories[i];
-                final style = getCategoryStyle(cat.name);
-                return Dismissible(
-                  key: Key(cat.id.toString()),
-                  // Swipe δεξιά = επεξεργασία
-                  secondaryBackground: Container(
+          : Column(
+              children: [
+                if (_showHint)
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: const Color(0xFFEEF0FF),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: const Color(0xFF3949AB).withOpacity(0.2)),
                     ),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Row(
                       children: [
-                        Icon(Icons.delete, color: Colors.white, size: 26),
-                        SizedBox(height: 4),
-                        Text('Διαγραφή',
+                        const Icon(Icons.swipe,
+                            color: Color(0xFF3949AB), size: 18),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Σύρε δεξιά για επεξεργασία · Σύρε αριστερά για διαγραφή',
                             style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold)),
+                                fontSize: 12, color: Color(0xFF3949AB)),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _showHint = false),
+                          child: const Icon(Icons.close,
+                              size: 16, color: Color(0xFF3949AB)),
+                        ),
                       ],
                     ),
                   ),
-                  // Swipe αριστερά = διαγραφή
-                  background: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3949AB),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 20),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.edit, color: Colors.white, size: 26),
-                        SizedBox(height: 4),
-                        Text('Επεξεργασία',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _categories.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (ctx, i) {
+                      final cat = _categories[i];
+                      final style = getCategoryStyle(cat.name);
+                      final count = _expenseCount[cat.id] ?? 0;
+                      final total = _expenseTotal[cat.id] ?? 0.0;
+
+                      return Dismissible(
+                        key: Key(cat.id.toString()),
+                        secondaryBackground: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.delete,
+                                  color: Colors.white, size: 26),
+                              SizedBox(height: 4),
+                              Text('Διαγραφή',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                        background: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3949AB),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(left: 20),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.edit,
+                                  color: Colors.white, size: 26),
+                              SizedBox(height: 4),
+                              Text('Επεξεργασία',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.startToEnd) {
+                            _showCategoryDialog(existing: cat);
+                            return false;
+                          } else {
+                            return await _confirmDelete(cat);
+                          }
+                        },
+                        onDismissed: (direction) async {
+                          if (direction == DismissDirection.endToStart) {
+                            await DatabaseHelper.instance
+                                .deleteCategory(cat.id!);
+                            _loadCategories();
+                          }
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: style.color.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(14),
+                            border:
+                                Border.all(color: style.color, width: 1.5),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            leading: Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: style.color,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(style.icon,
+                                  color: const Color(0xFF3949AB), size: 22),
+                            ),
+                            title: Text(cat.name,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15)),
+                            subtitle: cat.description != null
+                                ? Text(cat.description!,
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.grey))
+                                : null,
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '€${total.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Color(0xFF3949AB)),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '$count ${count == 1 ? 'έξοδο' : 'έξοδα'}',
+                                  style: const TextStyle(
+                                      fontSize: 11, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  confirmDismiss: (direction) async {
-                    if (direction == DismissDirection.startToEnd) {
-                      // Swipe δεξιά = επεξεργασία
-                      _showCategoryDialog(existing: cat);
-                      return false; // μην αφαιρείς το item
-                    } else {
-                      // Swipe αριστερά = διαγραφή
-                      return await _confirmDelete(cat);
-                    }
-                  },
-                  onDismissed: (direction) async {
-                    if (direction == DismissDirection.endToStart) {
-                      await DatabaseHelper.instance.deleteCategory(cat.id!);
-                      _loadCategories();
-                    }
-                  },
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: style.color,
-                        child: Icon(style.icon,
-                            color: const Color(0xFF3949AB), size: 20),
-                      ),
-                      title: Text(cat.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: cat.description != null
-                          ? Text(cat.description!)
-                          : const Text('Σύρε → επεξεργασία  |  ← διαγραφή',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                  fontStyle: FontStyle.italic)),
-                    ),
-                  ),
-                );
-              },
+                ),
+              ],
             ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF3949AB),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        onPressed: () => _showCategoryDialog(),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 }
