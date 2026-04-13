@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Category> _categories = [];
   double _monthTotal = 0;
   double _todayTotal = 0;
+  List<_DayBar> _weekData = [];
 
   @override
   void initState() {
@@ -39,11 +40,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final todayData = await DatabaseHelper.instance
         .getExpensesByCategory(todayStart, todayEnd);
 
+    // Υπολογισμός εξόδων τελευταίων 7 ημερών
+    final List<_DayBar> weekData = [];
+    for (int i = 6; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      final start = DateTime(day.year, day.month, day.day).toIso8601String();
+      final end = DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
+      final dayExpenses = expenses.where((e) {
+        final d = DateTime.parse(e.date);
+        return d.year == day.year && d.month == day.month && d.day == day.day;
+      });
+      final total = dayExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+      weekData.add(_DayBar(
+        day: day,
+        total: total,
+        isToday: i == 0,
+      ));
+    }
+
     setState(() {
       _categories = categories;
       _recent = expenses.take(5).toList();
       _monthTotal = monthData.fold(0, (sum, r) => sum + (r['total'] as double));
       _todayTotal = todayData.fold(0, (sum, r) => sum + (r['total'] as double));
+      _weekData = weekData;
     });
   }
 
@@ -55,8 +75,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String _dayLabel(DateTime d) {
+    const days = ['Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα', 'Κυ'];
+    return days[d.weekday - 1];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final maxVal = _weekData.isEmpty
+        ? 1.0
+        : _weekData.map((d) => d.total).reduce((a, b) => a > b ? a : b);
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _loadData,
@@ -105,6 +134,108 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
+            // ── Bar chart εβδομάδας ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('ΤΕΛΕΥΤΑΙΕΣ 7 ΗΜΕΡΕΣ',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                  letterSpacing: 0.5)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 120,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: _weekData.map((bar) {
+                            final heightRatio = maxVal > 0
+                                ? bar.total / maxVal
+                                : 0.0;
+                            final barHeight = 80.0 * heightRatio;
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                // Ποσό πάνω από μπάρα
+                                if (bar.total > 0)
+                                  Text(
+                                    '€${bar.total.toStringAsFixed(0)}',
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: bar.isToday
+                                            ? const Color(0xFF3949AB)
+                                            : Colors.grey),
+                                  ),
+                                if (bar.total > 0) const SizedBox(height: 4),
+                                // Μπάρα
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 600),
+                                  curve: Curves.easeOut,
+                                  width: 28,
+                                  height: bar.total > 0
+                                      ? barHeight.clamp(8.0, 80.0)
+                                      : 4,
+                                  decoration: BoxDecoration(
+                                    color: bar.isToday
+                                        ? const Color(0xFF3949AB)
+                                        : bar.total > 0
+                                            ? const Color(0xFF3949AB)
+                                                .withOpacity(0.3)
+                                            : Colors.grey.shade200,
+                                    borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(6)),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                // Label ημέρας
+                                Text(
+                                  _dayLabel(bar.day),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: bar.isToday
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: bar.isToday
+                                        ? const Color(0xFF3949AB)
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Πρόσφατα έξοδα ──
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -117,11 +248,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.grey,
                             letterSpacing: 0.5)),
-                                TextButton(
-                  onPressed: widget.onViewAll,
-                  child: const Text('Όλα',
-                  style: TextStyle(color: Color(0xFF3949AB))),
-                  ),
+                    TextButton(
+                      onPressed: widget.onViewAll,
+                      child: const Text('Όλα',
+                          style: TextStyle(color: Color(0xFF3949AB))),
+                    ),
                   ],
                 ),
               ),
@@ -153,7 +284,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       (ctx, i) {
                         final e = _recent[i];
                         final date = DateTime.parse(e.date);
-                        final style = getCategoryStyle(_categoryName(e.categoryId));
+                        final style =
+                            getCategoryStyle(_categoryName(e.categoryId));
                         return Padding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                           child: Container(
@@ -225,6 +357,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+class _DayBar {
+  final DateTime day;
+  final double total;
+  final bool isToday;
+
+  _DayBar({required this.day, required this.total, required this.isToday});
 }
 
 class _SummaryCard extends StatelessWidget {

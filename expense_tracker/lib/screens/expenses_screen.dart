@@ -5,6 +5,8 @@ import '../models/category.dart';
 import '../utils/category_style.dart';
 import 'add_expense_screen.dart';
 
+enum SortOption { date, amount, category }
+
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
 
@@ -12,15 +14,33 @@ class ExpensesScreen extends StatefulWidget {
   State<ExpensesScreen> createState() => _ExpensesScreenState();
 }
 
-class _ExpensesScreenState extends State<ExpensesScreen> {
+class _ExpensesScreenState extends State<ExpensesScreen>
+    with SingleTickerProviderStateMixin {
   List<Expense> _expenses = [];
   List<Category> _categories = [];
-  int? _selectedCategoryId; // null = Όλα
+  int? _selectedCategoryId;
+  SortOption _sortOption = SortOption.date;
+
+  late AnimationController _fabController;
+  late Animation<double> _fabAnimation;
 
   @override
   void initState() {
     super.initState();
+    _fabController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _fabAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _fabController, curve: Curves.elasticOut),
+    );
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _fabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -30,6 +50,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       _expenses = expenses;
       _categories = categories;
     });
+    _fabController.forward(from: 0);
   }
 
   String _categoryName(int id) {
@@ -40,20 +61,42 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     }
   }
 
-  List<Expense> get _filteredExpenses {
-    if (_selectedCategoryId == null) return _expenses;
-    return _expenses.where((e) => e.categoryId == _selectedCategoryId).toList();
+  List<Expense> get _filteredAndSorted {
+    List<Expense> list = _selectedCategoryId == null
+        ? List.from(_expenses)
+        : _expenses.where((e) => e.categoryId == _selectedCategoryId).toList();
+
+    switch (_sortOption) {
+      case SortOption.date:
+        list.sort((a, b) => b.date.compareTo(a.date));
+        break;
+      case SortOption.amount:
+        list.sort((a, b) => b.amount.compareTo(a.amount));
+        break;
+      case SortOption.category:
+        list.sort((a, b) =>
+            _categoryName(a.categoryId).compareTo(_categoryName(b.categoryId)));
+        break;
+    }
+    return list;
   }
 
   Map<String, List<Expense>> _groupByDay(List<Expense> expenses) {
+    if (_sortOption != SortOption.date) {
+      return {'Ταξινομημένα': expenses};
+    }
     final Map<String, List<Expense>> grouped = {};
     for (final e in expenses) {
       final date = DateTime.parse(e.date);
       final now = DateTime.now();
       String key;
-      if (date.year == now.year && date.month == now.month && date.day == now.day) {
+      if (date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day) {
         key = 'Σήμερα';
-      } else if (date.year == now.year && date.month == now.month && date.day == now.day - 1) {
+      } else if (date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day - 1) {
         key = 'Χθες';
       } else {
         key = '${date.day}/${date.month}/${date.year}';
@@ -61,6 +104,68 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       grouped.putIfAbsent(key, () => []).add(e);
     }
     return grouped;
+  }
+
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Ταξινόμηση',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            _sortTile(ctx, SortOption.date, Icons.calendar_today_outlined,
+                'Κατά ημερομηνία', 'Νεότερα πρώτα'),
+            _sortTile(ctx, SortOption.amount, Icons.euro_outlined,
+                'Κατά ποσό', 'Μεγαλύτερα πρώτα'),
+            _sortTile(ctx, SortOption.category, Icons.label_outline,
+                'Κατά κατηγορία', 'Αλφαβητικά'),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sortTile(BuildContext ctx, SortOption option, IconData icon,
+      String title, String subtitle) {
+    final isSelected = _sortOption == option;
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF3949AB)
+              : const Color(0xFFEEF0FF),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon,
+            color: isSelected ? Colors.white : const Color(0xFF3949AB),
+            size: 20),
+      ),
+      title: Text(title,
+          style: TextStyle(
+              fontWeight:
+                  isSelected ? FontWeight.bold : FontWeight.normal)),
+      subtitle: Text(subtitle,
+          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle, color: Color(0xFF3949AB))
+          : null,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      tileColor: isSelected ? const Color(0xFFEEF0FF) : null,
+      onTap: () {
+        setState(() => _sortOption = option);
+        Navigator.pop(ctx);
+      },
+    );
   }
 
   Future<bool?> _confirmDelete(BuildContext context) {
@@ -78,8 +183,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             ),
           ],
         ),
-        content: const Text(
-            'Είστε σίγουροι για τη διαγραφή αυτού του εξόδου;'),
+        content:
+            const Text('Είστε σίγουροι για τη διαγραφή αυτού του εξόδου;'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -172,7 +277,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     Navigator.pop(ctx);
                     final confirm = await _confirmDelete(context);
                     if (confirm == true) {
-                      await DatabaseHelper.instance.deleteExpense(expense.id!);
+                      await DatabaseHelper.instance
+                          .deleteExpense(expense.id!);
                       _loadData();
                     }
                   },
@@ -192,16 +298,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          // Chip "Όλα"
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
               label: const Text('Όλα'),
               selected: _selectedCategoryId == null,
               showCheckmark: false,
-              onSelected: (_) => setState(() => _selectedCategoryId = null),
+              onSelected: (_) =>
+                  setState(() => _selectedCategoryId = null),
               selectedColor: const Color(0xFF3949AB),
-              checkmarkColor: Colors.white,
               labelStyle: TextStyle(
                 color: _selectedCategoryId == null
                     ? Colors.white
@@ -221,7 +326,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ),
             ),
           ),
-          // Chips ανά κατηγορία
           ..._categories.map((cat) {
             final isSelected = _selectedCategoryId == cat.id;
             final style = getCategoryStyle(cat.name);
@@ -239,9 +343,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 onSelected: (_) => setState(() =>
                     _selectedCategoryId = isSelected ? null : cat.id),
                 selectedColor: const Color(0xFF3949AB),
-                checkmarkColor: Colors.white,
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  color:
+                      isSelected ? Colors.white : Colors.grey.shade700,
                   fontWeight:
                       isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -262,19 +366,42 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
+  String get _sortLabel {
+    switch (_sortOption) {
+      case SortOption.date:
+        return 'Ημερομηνία';
+      case SortOption.amount:
+        return 'Ποσό';
+      case SortOption.category:
+        return 'Κατηγορία';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredExpenses;
+    final filtered = _filteredAndSorted;
     final grouped = _groupByDay(filtered);
     final keys = grouped.keys.toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Έξοδα',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            style:
+                TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF3949AB),
         foregroundColor: Colors.white,
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton.icon(
+              onPressed: _showSortOptions,
+              icon: const Icon(Icons.sort, color: Colors.white, size: 18),
+              label: Text(_sortLabel,
+                  style: const TextStyle(color: Colors.white, fontSize: 12)),
+            ),
+          ),
+        ],
       ),
       body: _expenses.isEmpty
           ? Center(
@@ -294,12 +421,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             )
           : Column(
               children: [
-                // Chips filter bar
                 const SizedBox(height: 12),
                 _buildChips(),
                 const SizedBox(height: 8),
-
-                // Αν δεν υπάρχουν αποτελέσματα για το φίλτρο
                 if (filtered.isEmpty)
                   Expanded(
                     child: Center(
@@ -347,7 +471,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                           fontWeight: FontWeight.bold,
                                           color: Colors.grey,
                                           letterSpacing: 0.3)),
-                                  Text('€${dayTotal.toStringAsFixed(2)}',
+                                  Text(
+                                      '€${dayTotal.toStringAsFixed(2)}',
                                       style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.bold,
@@ -373,7 +498,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                       16, 0, 16, 8),
                                   decoration: BoxDecoration(
                                     color: Colors.red,
-                                    borderRadius: BorderRadius.circular(14),
+                                    borderRadius:
+                                        BorderRadius.circular(14),
                                   ),
                                   alignment: Alignment.centerRight,
                                   padding:
@@ -415,7 +541,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                       onTap: () => _showDetail(e),
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 4),
+                                              horizontal: 16,
+                                              vertical: 4),
                                       leading: Container(
                                         width: 42,
                                         height: 42,
@@ -462,6 +589,23 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   ),
               ],
             ),
+      floatingActionButton: ScaleTransition(
+        scale: _fabAnimation,
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFF3949AB),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          onPressed: () async {
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AddExpenseScreen()));
+            _loadData();
+          },
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      ),
     );
   }
 }
