@@ -35,7 +35,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     try {
       return _categories.firstWhere((c) => c.id == id).name;
     } catch (_) {
-      return 'Unknown';
+      return 'Άγνωστη';
     }
   }
 

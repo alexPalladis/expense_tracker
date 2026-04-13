@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../db/database_helper.dart';
 
 class AnalysisScreen extends StatefulWidget {
@@ -13,6 +14,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   DateTime? _endDate;
   List<Map<String, dynamic>> _results = [];
   bool _searched = false;
+  int _touchedIndex = -1;
+
+  final List<Color> _chartColors = [
+    const Color(0xFF3949AB),
+    const Color(0xFF26C6DA),
+    const Color(0xFFEF5350),
+    const Color(0xFFFFCA28),
+    const Color(0xFF66BB6A),
+    const Color(0xFFAB47BC),
+    const Color(0xFFFF7043),
+    const Color(0xFF26A69A),
+  ];
 
   Future<void> _pickStart() async {
     final picked = await showDatePicker(
@@ -37,26 +50,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   Future<void> _analyze() async {
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select both dates')));
+          const SnackBar(content: Text('Παρακαλώ επιλέξτε και τις δύο ημερομηνίες')));
       return;
     }
     if (_endDate!.isBefore(_startDate!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Η ημερομηνία λήξης πρέπει να είναι μετά την ημερομηνία έναρξης')));
+          const SnackBar(content: Text('Η ημερομηνία λήξης πρέπει να είναι μετά την έναρξη')));
       return;
     }
-
-    // Use end of day for endDate so it includes all expenses on that day
     final start = _startDate!.toIso8601String();
-    final end = DateTime(_endDate!.year, _endDate!.month, _endDate!.day,
-            23, 59, 59)
+    final end = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59)
         .toIso8601String();
-
-    final results =
-        await DatabaseHelper.instance.getExpensesByCategory(start, end);
+    final results = await DatabaseHelper.instance.getExpensesByCategory(start, end);
     setState(() {
       _results = results;
       _searched = true;
+      _touchedIndex = -1;
     });
   }
 
@@ -64,30 +73,27 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final total = _results.fold<double>(
-        0, (sum, r) => sum + (r['total'] as double));
+    final total = _results.fold<double>(0, (sum, r) => sum + (r['total'] as double));
 
     return Scaffold(
       appBar: AppBar(
-  title: const Text('Ανάλυση',
-      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-  backgroundColor: const Color(0xFF3949AB),
-  foregroundColor: Colors.white,
-  iconTheme: const IconThemeData(color: Colors.white),
-  centerTitle: true
-),
-      body: Padding(
+        title: const Text('Ανάλυση',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF3949AB),
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date range pickers
+            // Date pickers
             Row(children: [
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
-                  label: Text(
-                      _startDate == null ? 'Ημ/νία έναρξης' : _fmt(_startDate!)),
+                  label: Text(_startDate == null ? 'Ημ/νία έναρξης' : _fmt(_startDate!)),
                   onPressed: _pickStart,
                 ),
               ),
@@ -95,8 +101,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
-                  label: Text(
-                      _endDate == null ? 'Ημ/νία λήξης' : _fmt(_endDate!)),
+                  label: Text(_endDate == null ? 'Ημ/νία λήξης' : _fmt(_endDate!)),
                   onPressed: _pickEnd,
                 ),
               ),
@@ -108,62 +113,219 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 icon: const Icon(Icons.bar_chart),
                 label: const Text('Ανάλυση'),
                 style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3949AB),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14)),
                 onPressed: _analyze,
               ),
             ),
             const SizedBox(height: 24),
 
-            // Results
+            // Empty state
             if (_searched && _results.isEmpty)
-              const Center(
-                  child: Text('Δε βρέθηκαν έξοδα για αυτή την περίοδο.',
-                      style: TextStyle(color: Colors.grey))),
-
-            if (_results.isNotEmpty) ...[
-              Text('Total: €${total.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _results.length,
-                  separatorBuilder: (_, __) => const Divider(),
-                  itemBuilder: (ctx, i) {
-                    final row = _results[i];
-                    final rowTotal = row['total'] as double;
-                    final percent =
-                        total > 0 ? rowTotal / total : 0.0;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(row['category_name'],
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16)),
-                            Text('€${rowTotal.toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 16)),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        LinearProgressIndicator(
-                          value: percent,
-                          minHeight: 8,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        const SizedBox(height: 4),
-                        Text('${(percent * 100).toStringAsFixed(1)}% επί του συνόλου',
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12)),
-                      ],
-                    );
-                  },
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.search_off_outlined,
+                          size: 72, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      const Text('Δεν βρέθηκαν έξοδα',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Δεν υπάρχουν έξοδα για την περίοδο\n${_fmt(_startDate!)} — ${_fmt(_endDate!)}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+
+            // Results
+            if (_results.isNotEmpty) ...[
+              // Total
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF0FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Σύνολο περιόδου',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF3949AB))),
+                    Text('€${total.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF3949AB))),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Pie chart
+              const Text('ΚΑΤΑΝΟΜΗ ΕΞΟΔΩΝ',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 0.5)),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 220,
+                child: PieChart(
+                  PieChartData(
+                    pieTouchData: PieTouchData(
+                      touchCallback: (event, response) {
+                        setState(() {
+                          if (!event.isInterestedForInteractions ||
+                              response == null ||
+                              response.touchedSection == null) {
+                            _touchedIndex = -1;
+                            return;
+                          }
+                          _touchedIndex =
+                              response.touchedSection!.touchedSectionIndex;
+                        });
+                      },
+                    ),
+                    sections: _results.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final row = entry.value;
+                      final rowTotal = row['total'] as double;
+                      final percent = total > 0 ? rowTotal / total * 100 : 0.0;
+                      final isTouched = i == _touchedIndex;
+                      return PieChartSectionData(
+                        color: _chartColors[i % _chartColors.length],
+                        value: rowTotal,
+                        title: '${percent.toStringAsFixed(1)}%',
+                        radius: isTouched ? 90 : 75,
+                        titleStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      );
+                    }).toList(),
+                    borderData: FlBorderData(show: false),
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 40,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Legend
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: _results.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final row = entry.value;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: _chartColors[i % _chartColors.length],
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(row['category_name'],
+                          style: const TextStyle(fontSize: 12)),
+                    ],
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+
+              // Category breakdown
+              const Text('ΑΝΑΛΥΣΗ ΑΝΑ ΚΑΤΗΓΟΡΙΑ',
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 0.5)),
+              const SizedBox(height: 12),
+              ...(_results.asMap().entries.map((entry) {
+                final i = entry.key;
+                final row = entry.value;
+                final rowTotal = row['total'] as double;
+                final percent = total > 0 ? rowTotal / total : 0.0;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: _chartColors[i % _chartColors.length],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(row['category_name'],
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 15)),
+                          ]),
+                          Text('€${rowTotal.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF3949AB))),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: percent,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey.shade100,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              _chartColors[i % _chartColors.length]),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('${(percent * 100).toStringAsFixed(1)}% του συνόλου',
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                );
+              })),
             ],
           ],
         ),

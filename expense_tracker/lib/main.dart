@@ -37,12 +37,12 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    ExpensesScreen(),
-    CategoriesScreen(),
-    AnalysisScreen(),
-  ];
+  late final List<Widget> _screens = [
+  HomeScreen(onViewAll: () => setState(() => _currentIndex = 1)),
+  const ExpensesScreen(),
+  const CategoriesScreen(),
+  const AnalysisScreen(),
+];
 
   void _openAddExpense() async {
     await Navigator.push(

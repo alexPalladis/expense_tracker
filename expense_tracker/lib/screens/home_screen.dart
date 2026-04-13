@@ -6,7 +6,8 @@ import '../utils/category_style.dart';
 import 'add_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onViewAll;
+  const HomeScreen({super.key, this.onViewAll});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -50,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       return _categories.firstWhere((c) => c.id == id).name;
     } catch (_) {
-      return 'Unknown';
+      return 'Άγνωστη';
     }
   }
 
@@ -116,11 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.grey,
                             letterSpacing: 0.5)),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Όλα',
-                          style: TextStyle(color: Color(0xFF3949AB))),
-                    ),
+                                TextButton(
+                  onPressed: widget.onViewAll,
+                  child: const Text('Όλα',
+                  style: TextStyle(color: Color(0xFF3949AB))),
+                  ),
                   ],
                 ),
               ),
