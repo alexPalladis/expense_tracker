@@ -15,6 +15,7 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   List<Expense> _expenses = [];
   List<Category> _categories = [];
+  int? _selectedCategoryId; // null = Όλα
 
   @override
   void initState() {
@@ -39,9 +40,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     }
   }
 
-  Map<String, List<Expense>> _groupByDay() {
+  List<Expense> get _filteredExpenses {
+    if (_selectedCategoryId == null) return _expenses;
+    return _expenses.where((e) => e.categoryId == _selectedCategoryId).toList();
+  }
+
+  Map<String, List<Expense>> _groupByDay(List<Expense> expenses) {
     final Map<String, List<Expense>> grouped = {};
-    for (final e in _expenses) {
+    for (final e in expenses) {
       final date = DateTime.parse(e.date);
       final now = DateTime.now();
       String key;
@@ -179,9 +185,87 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
+  Widget _buildChips() {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          // Chip "Όλα"
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: const Text('Όλα'),
+              selected: _selectedCategoryId == null,
+              showCheckmark: false,
+              onSelected: (_) => setState(() => _selectedCategoryId = null),
+              selectedColor: const Color(0xFF3949AB),
+              checkmarkColor: Colors.white,
+              labelStyle: TextStyle(
+                color: _selectedCategoryId == null
+                    ? Colors.white
+                    : Colors.grey.shade700,
+                fontWeight: _selectedCategoryId == null
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: _selectedCategoryId == null
+                      ? const Color(0xFF3949AB)
+                      : Colors.grey.shade300,
+                ),
+              ),
+            ),
+          ),
+          // Chips ανά κατηγορία
+          ..._categories.map((cat) {
+            final isSelected = _selectedCategoryId == cat.id;
+            final style = getCategoryStyle(cat.name);
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                avatar: Icon(style.icon,
+                    size: 16,
+                    color: isSelected
+                        ? Colors.white
+                        : const Color(0xFF3949AB)),
+                label: Text(cat.name),
+                selected: isSelected,
+                showCheckmark: false,
+                onSelected: (_) => setState(() =>
+                    _selectedCategoryId = isSelected ? null : cat.id),
+                selectedColor: const Color(0xFF3949AB),
+                checkmarkColor: Colors.white,
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                backgroundColor: style.color,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: isSelected
+                        ? const Color(0xFF3949AB)
+                        : Colors.grey.shade300,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final grouped = _groupByDay();
+    final filtered = _filteredExpenses;
+    final grouped = _groupByDay(filtered);
     final keys = grouped.keys.toList();
 
     return Scaffold(
@@ -208,122 +292,175 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 ],
               ),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: keys.length,
-              itemBuilder: (ctx, groupIndex) {
-                final dayKey = keys[groupIndex];
-                final dayExpenses = grouped[dayKey]!;
-                final dayTotal = dayExpenses.fold<double>(
-                    0, (sum, e) => sum + e.amount);
+          : Column(
+              children: [
+                // Chips filter bar
+                const SizedBox(height: 12),
+                _buildChips(),
+                const SizedBox(height: 8),
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Αν δεν υπάρχουν αποτελέσματα για το φίλτρο
+                if (filtered.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(dayKey,
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                  letterSpacing: 0.3)),
-                          Text('€${dayTotal.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF3949AB))),
+                          Icon(Icons.filter_list_off,
+                              size: 64, color: Colors.grey.shade300),
+                          const SizedBox(height: 16),
+                          const Text('Δεν υπάρχουν έξοδα',
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.grey)),
+                          const SizedBox(height: 8),
+                          const Text('για αυτή την κατηγορία.',
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.grey)),
                         ],
                       ),
                     ),
-                    ...dayExpenses.map((e) {
-                      final style = getCategoryStyle(_categoryName(e.categoryId));
-                      return Dismissible(
-                        key: Key(e.id.toString()),
-                        direction: DismissDirection.endToStart,
-                        confirmDismiss: (direction) => _confirmDelete(context),
-                        onDismissed: (direction) async {
-                          await DatabaseHelper.instance.deleteExpense(e.id!);
-                          _loadData();
-                        },
-                        background: Container(
-                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.delete, color: Colors.white, size: 26),
-                              SizedBox(height: 4),
-                              Text('Διαγραφή',
-                                  style: TextStyle(
+                  )
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      itemCount: keys.length,
+                      itemBuilder: (ctx, groupIndex) {
+                        final dayKey = keys[groupIndex];
+                        final dayExpenses = grouped[dayKey]!;
+                        final dayTotal = dayExpenses.fold<double>(
+                            0, (sum, e) => sum + e.amount);
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(dayKey,
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                          letterSpacing: 0.3)),
+                                  Text('€${dayTotal.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF3949AB))),
+                                ],
+                              ),
+                            ),
+                            ...dayExpenses.map((e) {
+                              final style = getCategoryStyle(
+                                  _categoryName(e.categoryId));
+                              return Dismissible(
+                                key: Key(e.id.toString()),
+                                direction: DismissDirection.endToStart,
+                                confirmDismiss: (direction) =>
+                                    _confirmDelete(context),
+                                onDismissed: (direction) async {
+                                  await DatabaseHelper.instance
+                                      .deleteExpense(e.id!);
+                                  _loadData();
+                                },
+                                background: Container(
+                                  margin: const EdgeInsets.fromLTRB(
+                                      16, 0, 16, 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  alignment: Alignment.centerRight,
+                                  padding:
+                                      const EdgeInsets.only(right: 20),
+                                  child: const Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.delete,
+                                          color: Colors.white, size: 26),
+                                      SizedBox(height: 4),
+                                      Text('Διαγραφή',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight:
+                                                  FontWeight.bold)),
+                                    ],
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      16, 0, 16, 8),
+                                  child: Container(
+                                    decoration: BoxDecoration(
                                       color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                )
-                              ],
-                            ),
-                            child: ListTile(
-                              onTap: () => _showDetail(e),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
-                              leading: Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: style.color,
-                                  borderRadius: BorderRadius.circular(12),
+                                      borderRadius:
+                                          BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withOpacity(0.05),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        )
+                                      ],
+                                    ),
+                                    child: ListTile(
+                                      onTap: () => _showDetail(e),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 4),
+                                      leading: Container(
+                                        width: 42,
+                                        height: 42,
+                                        decoration: BoxDecoration(
+                                          color: style.color,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(style.icon,
+                                            color:
+                                                const Color(0xFF3949AB),
+                                            size: 20),
+                                      ),
+                                      title: Text(
+                                        e.description ??
+                                            _categoryName(e.categoryId),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14),
+                                      ),
+                                      subtitle: Text(
+                                        _categoryName(e.categoryId),
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey),
+                                      ),
+                                      trailing: Text(
+                                        '€${e.amount.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: Color(0xFF3949AB),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                child: Icon(style.icon,
-                                    color: const Color(0xFF3949AB), size: 20),
-                              ),
-                              title: Text(
-                                e.description ?? _categoryName(e.categoryId),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600, fontSize: 14),
-                              ),
-                              subtitle: Text(
-                                _categoryName(e.categoryId),
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey),
-                              ),
-                              trailing: Text(
-                                '€${e.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: Color(0xFF3949AB),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                );
-              },
+                              );
+                            }),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+              ],
             ),
     );
   }

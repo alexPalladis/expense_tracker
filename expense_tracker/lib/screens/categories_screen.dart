@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
 import '../models/category.dart';
+import '../utils/category_style.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -97,8 +98,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  void _deleteCategory(Category category) async {
-    final confirm = await showDialog<bool>(
+  Future<bool?> _confirmDelete(Category category) {
+    return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -129,10 +130,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         ],
       ),
     );
-    if (confirm == true) {
-      await DatabaseHelper.instance.deleteCategory(category.id!);
-      _loadCategories();
-    }
   }
 
   @override
@@ -159,34 +156,85 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (ctx, i) {
                 final cat = _categories[i];
-                return Card(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: const Color(0xFFEEF0FF),
-                      child: Icon(Icons.label_outline,
-                          color: const Color(0xFF3949AB)),
+                final style = getCategoryStyle(cat.name);
+                return Dismissible(
+                  key: Key(cat.id.toString()),
+                  // Swipe δεξιά = επεξεργασία
+                  secondaryBackground: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    title: Text(cat.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: cat.description != null
-                        ? Text(cat.description!)
-                        : null,
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit,
-                              color: Color(0xFF3949AB)),
-                          onPressed: () =>
-                              _showCategoryDialog(existing: cat),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteCategory(cat),
-                        ),
+                        Icon(Icons.delete, color: Colors.white, size: 26),
+                        SizedBox(height: 4),
+                        Text('Διαγραφή',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold)),
                       ],
+                    ),
+                  ),
+                  // Swipe αριστερά = διαγραφή
+                  background: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3949AB),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.only(left: 20),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.edit, color: Colors.white, size: 26),
+                        SizedBox(height: 4),
+                        Text('Επεξεργασία',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                  confirmDismiss: (direction) async {
+                    if (direction == DismissDirection.startToEnd) {
+                      // Swipe δεξιά = επεξεργασία
+                      _showCategoryDialog(existing: cat);
+                      return false; // μην αφαιρείς το item
+                    } else {
+                      // Swipe αριστερά = διαγραφή
+                      return await _confirmDelete(cat);
+                    }
+                  },
+                  onDismissed: (direction) async {
+                    if (direction == DismissDirection.endToStart) {
+                      await DatabaseHelper.instance.deleteCategory(cat.id!);
+                      _loadCategories();
+                    }
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: style.color,
+                        child: Icon(style.icon,
+                            color: const Color(0xFF3949AB), size: 20),
+                      ),
+                      title: Text(cat.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: cat.description != null
+                          ? Text(cat.description!)
+                          : const Text('Σύρε → επεξεργασία  |  ← διαγραφή',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                  fontStyle: FontStyle.italic)),
                     ),
                   ),
                 );
