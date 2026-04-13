@@ -7,7 +7,8 @@ import 'add_expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onViewAll;
-  const HomeScreen({super.key, this.onViewAll});
+  final VoidCallback? onAnalysis;
+  const HomeScreen({super.key, this.onViewAll, this.onAnalysis});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -100,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.bar_chart, color: Colors.white),
-                  onPressed: () {},
+                  onPressed: widget.onAnalysis,
                 ),
               ],
               flexibleSpace: FlexibleSpaceBar(

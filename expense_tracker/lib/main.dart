@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_expense_screen.dart';
 import 'screens/expenses_screen.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF5F6FA),
       ),
-      home: const MainScreen(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -38,11 +39,14 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   late final List<Widget> _screens = [
-  HomeScreen(onViewAll: () => setState(() => _currentIndex = 1)),
-  const ExpensesScreen(),
-  const CategoriesScreen(),
-  const AnalysisScreen(),
-];
+    HomeScreen(
+      onViewAll: () => setState(() => _currentIndex = 1),
+      onAnalysis: () => setState(() => _currentIndex = 3),
+    ),
+    const ExpensesScreen(),
+    const CategoriesScreen(),
+    const AnalysisScreen(),
+  ];
 
   void _openAddExpense() async {
     await Navigator.push(
@@ -77,7 +81,8 @@ class _MainScreenState extends State<MainScreen> {
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(26),
                   ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 28),
+                  child: const Icon(Icons.person,
+                      color: Colors.white, size: 28),
                 ),
                 const SizedBox(height: 12),
                 const Text('Expense Tracker',
@@ -95,31 +100,46 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icons.home_outlined,
             label: 'Αρχική',
             active: _currentIndex == 0,
-            onTap: () { setState(() => _currentIndex = 0); Navigator.pop(context); },
+            onTap: () {
+              setState(() => _currentIndex = 0);
+              Navigator.pop(context);
+            },
           ),
           _DrawerItem(
             icon: Icons.add_circle_outline,
             label: 'Προσθήκη Εξόδου',
             active: false,
-            onTap: () { Navigator.pop(context); _openAddExpense(); },
+            onTap: () {
+              Navigator.pop(context);
+              _openAddExpense();
+            },
           ),
           _DrawerItem(
             icon: Icons.list_alt_outlined,
             label: 'Όλα τα Έξοδα',
             active: _currentIndex == 1,
-            onTap: () { setState(() => _currentIndex = 1); Navigator.pop(context); },
+            onTap: () {
+              setState(() => _currentIndex = 1);
+              Navigator.pop(context);
+            },
           ),
           _DrawerItem(
             icon: Icons.label_outline,
             label: 'Κατηγορίες',
             active: _currentIndex == 2,
-            onTap: () { setState(() => _currentIndex = 2); Navigator.pop(context); },
+            onTap: () {
+              setState(() => _currentIndex = 2);
+              Navigator.pop(context);
+            },
           ),
           _DrawerItem(
             icon: Icons.bar_chart_outlined,
             label: 'Ανάλυση',
             active: _currentIndex == 3,
-            onTap: () { setState(() => _currentIndex = 3); Navigator.pop(context); },
+            onTap: () {
+              setState(() => _currentIndex = 3);
+              Navigator.pop(context);
+            },
           ),
           const Divider(),
           _DrawerItem(
@@ -203,7 +223,8 @@ class _DrawerItem extends StatelessWidget {
               color: active ? const Color(0xFF3949AB) : Colors.black87)),
       tileColor: active ? const Color(0xFFEEF0FF) : null,
       shape: active
-          ? const Border(left: BorderSide(color: Color(0xFF3949AB), width: 3))
+          ? const Border(
+              left: BorderSide(color: Color(0xFF3949AB), width: 3))
           : null,
       onTap: onTap,
     );
