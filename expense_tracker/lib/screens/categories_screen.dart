@@ -51,9 +51,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-            existing == null ? 'Νέα κατηγορία' : 'Επεξεργασία κατηγορίας'),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(existing == null
+            ? 'Νέα κατηγορία'
+            : 'Επεξεργασία κατηγορίας'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -109,21 +111,27 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               Navigator.pop(ctx);
               _loadCategories();
             },
-            child: Text(existing == null ? 'Προσθήκη' : 'Αποθήκευση'),
+            child:
+                Text(existing == null ? 'Προσθήκη' : 'Αποθήκευση'),
           ),
         ],
       ),
     );
   }
 
-  Future<bool?> _confirmDelete(Category category) {
-    return showDialog<bool>(
+  Future<void> _deleteCategory(Category category) async {
+    final expenseCount = await DatabaseHelper.instance
+        .getExpenseCountForCategory(category.id!);
+
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+            Icon(Icons.warning_amber_rounded,
+                color: Colors.red, size: 24),
             SizedBox(width: 8),
             Expanded(
               child: Text('Διαγραφή κατηγορίας',
@@ -131,8 +139,41 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             ),
           ],
         ),
-        content: Text(
-            'Είστε σίγουροι για τη διαγραφή της κατηγορίας "${category.name}";'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Είστε σίγουροι για τη διαγραφή της κατηγορίας "${category.name}";'),
+            if (expenseCount > 0) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(8),
+                  border:
+                      Border.all(color: Colors.orange.shade300),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: Colors.orange, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Υπάρχουν $expenseCount έξοδα σε αυτή την κατηγορία. '
+                        'Θα μετακινηθούν αυτόματα στην κατηγορία "Άγνωστη".',
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -148,6 +189,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         ],
       ),
     );
+
+    if (confirm == true) {
+      if (expenseCount > 0) {
+        final unknownId =
+            await DatabaseHelper.instance.getOrCreateUnknownCategory();
+        await DatabaseHelper.instance
+            .moveExpensesToCategory(category.id!, unknownId);
+      }
+      await DatabaseHelper.instance.deleteCategory(category.id!);
+      _loadCategories();
+    }
   }
 
   @override
@@ -192,7 +244,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   const Text(
                       'Δημιουργήστε κατηγορίες για να οργανώσετε\nτα έξοδά σας.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.grey)),
+                      style:
+                          TextStyle(fontSize: 13, color: Colors.grey)),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.add),
@@ -221,7 +274,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       color: const Color(0xFFEEF0FF),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: const Color(0xFF3949AB).withOpacity(0.2)),
+                          color: const Color(0xFF3949AB)
+                              .withOpacity(0.2)),
                     ),
                     child: Row(
                       children: [
@@ -232,11 +286,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           child: Text(
                             'Σύρε δεξιά για επεξεργασία · Σύρε αριστερά για διαγραφή',
                             style: TextStyle(
-                                fontSize: 12, color: Color(0xFF3949AB)),
+                                fontSize: 12,
+                                color: Color(0xFF3949AB)),
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() => _showHint = false),
+                          onTap: () =>
+                              setState(() => _showHint = false),
                           child: const Icon(Icons.close,
                               size: 16, color: Color(0xFF3949AB)),
                         ),
@@ -247,7 +303,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(12),
                     itemCount: _categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: 8),
                     itemBuilder: (ctx, i) {
                       final cat = _categories[i];
                       final style = getCategoryStyle(cat.name);
@@ -264,7 +321,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 20),
                           child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
                             children: [
                               Icon(Icons.delete,
                                   color: Colors.white, size: 26),
@@ -285,7 +343,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           alignment: Alignment.centerLeft,
                           padding: const EdgeInsets.only(left: 20),
                           child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
                             children: [
                               Icon(Icons.edit,
                                   color: Colors.white, size: 26),
@@ -299,39 +358,38 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           ),
                         ),
                         confirmDismiss: (direction) async {
-                          if (direction == DismissDirection.startToEnd) {
+                          if (direction ==
+                              DismissDirection.startToEnd) {
                             _showCategoryDialog(existing: cat);
                             return false;
                           } else {
-                            return await _confirmDelete(cat);
+                            await _deleteCategory(cat);
+                            return false;
                           }
                         },
-                        onDismissed: (direction) async {
-                          if (direction == DismissDirection.endToStart) {
-                            await DatabaseHelper.instance
-                                .deleteCategory(cat.id!);
-                            _loadCategories();
-                          }
-                        },
+                        onDismissed: (_) {},
                         child: Container(
                           decoration: BoxDecoration(
                             color: style.color.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(14),
-                            border:
-                                Border.all(color: style.color, width: 1.5),
+                            border: Border.all(
+                                color: style.color, width: 1.5),
                           ),
                           child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 6),
+                            contentPadding:
+                                const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 6),
                             leading: Container(
                               width: 46,
                               height: 46,
                               decoration: BoxDecoration(
                                 color: style.color,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(12),
                               ),
                               child: Icon(style.icon,
-                                  color: const Color(0xFF3949AB), size: 22),
+                                  color: const Color(0xFF3949AB),
+                                  size: 22),
                             ),
                             title: Text(cat.name,
                                 style: const TextStyle(
@@ -340,11 +398,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             subtitle: cat.description != null
                                 ? Text(cat.description!,
                                     style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey))
+                                        fontSize: 12,
+                                        color: Colors.grey))
                                 : null,
                             trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.end,
                               children: [
                                 Text(
                                   '€${total.toStringAsFixed(2)}',
@@ -357,7 +418,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                 Text(
                                   '$count ${count == 1 ? 'έξοδο' : 'έξοδα'}',
                                   style: const TextStyle(
-                                      fontSize: 11, color: Colors.grey),
+                                      fontSize: 11,
+                                      color: Colors.grey),
                                 ),
                               ],
                             ),

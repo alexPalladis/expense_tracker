@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
+    await DatabaseHelper.instance.fixOrphanedExpenses();
     final expenses = await DatabaseHelper.instance.getAllExpenses();
     final categories = await DatabaseHelper.instance.getAllCategories();
 
@@ -40,22 +41,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final todayData = await DatabaseHelper.instance
         .getExpensesByCategory(todayStart, todayEnd);
 
-    // Υπολογισμός εξόδων τελευταίων 7 ημερών
     final List<_DayBar> weekData = [];
     for (int i = 6; i >= 0; i--) {
       final day = now.subtract(Duration(days: i));
-      final start = DateTime(day.year, day.month, day.day).toIso8601String();
-      final end = DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
       final dayExpenses = expenses.where((e) {
         final d = DateTime.parse(e.date);
         return d.year == day.year && d.month == day.month && d.day == day.day;
       });
       final total = dayExpenses.fold<double>(0, (sum, e) => sum + e.amount);
-      weekData.add(_DayBar(
-        day: day,
-        total: total,
-        isToday: i == 0,
-      ));
+      weekData.add(_DayBar(day: day, total: total, isToday: i == 0));
     }
 
     setState(() {
@@ -154,17 +148,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('ΤΕΛΕΥΤΑΙΕΣ 7 ΗΜΕΡΕΣ',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                  letterSpacing: 0.5)),
-                        ],
-                      ),
+                      const Text('ΤΕΛΕΥΤΑΙΕΣ 7 ΗΜΕΡΕΣ',
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                              letterSpacing: 0.5)),
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 120,
@@ -172,14 +161,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: _weekData.map((bar) {
-                            final heightRatio = maxVal > 0
-                                ? bar.total / maxVal
-                                : 0.0;
+                            final heightRatio =
+                                maxVal > 0 ? bar.total / maxVal : 0.0;
                             final barHeight = 80.0 * heightRatio;
                             return Column(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                // Ποσό πάνω από μπάρα
                                 if (bar.total > 0)
                                   Text(
                                     '€${bar.total.toStringAsFixed(0)}',
@@ -191,7 +178,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             : Colors.grey),
                                   ),
                                 if (bar.total > 0) const SizedBox(height: 4),
-                                // Μπάρα
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 600),
                                   curve: Curves.easeOut,
@@ -211,7 +197,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                // Label ημέρας
                                 Text(
                                   _dayLabel(bar.day),
                                   style: TextStyle(
@@ -235,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // ── Πρόσφατα έξοδα ──
+            // ── Πρόσφατα έξοδα header ──
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -258,22 +243,49 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
+            // ── Empty state ή λίστα ──
             _recent.isEmpty
                 ? SliverToBoxAdapter(
                     child: Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(40),
+                        padding: const EdgeInsets.fromLTRB(16, 32, 16, 32),
                         child: Column(
                           children: [
                             Icon(Icons.receipt_long_outlined,
-                                size: 64, color: Colors.grey.shade300),
+                                size: 72, color: Colors.grey.shade300),
                             const SizedBox(height: 16),
                             const Text('Δεν υπάρχουν έξοδα ακόμα.',
-                                style: TextStyle(color: Colors.grey)),
-                            const SizedBox(height: 8),
-                            const Text('Πιέστε + για να προσθέσετε ένα.',
                                 style: TextStyle(
-                                    color: Colors.grey, fontSize: 13)),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey)),
+                            const SizedBox(height: 8),
+                            const Text(
+                                'Καταγράψτε τα καθημερινά σας έξοδα\nγια να παρακολουθείτε τις δαπάνες σας.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey)),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEEF0FF),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.touch_app_outlined,
+                                      color: Color(0xFF3949AB), size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Πιέστε + για να ξεκινήσετε',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF3949AB))),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -363,7 +375,6 @@ class _DayBar {
   final DateTime day;
   final double total;
   final bool isToday;
-
   _DayBar({required this.day, required this.total, required this.isToday});
 }
 
@@ -386,9 +397,7 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(label,
               style: const TextStyle(
-                  fontSize: 8,
-                  color: Colors.white70,
-                  letterSpacing: 0.5)),
+                  fontSize: 8, color: Colors.white70, letterSpacing: 0.5)),
           const SizedBox(height: 2),
           Text(value,
               style: const TextStyle(

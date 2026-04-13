@@ -4,7 +4,6 @@ import '../models/category.dart';
 import '../models/expense.dart';
 
 class DatabaseHelper {
-  // Singleton pattern — only one instance exists in the whole app
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
@@ -19,16 +18,10 @@ class DatabaseHelper {
   Future<Database> _initDB(String fileName) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, fileName);
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
-    // Create categories table
     await db.execute('''
       CREATE TABLE categories (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,8 +29,6 @@ class DatabaseHelper {
         description TEXT
       )
     ''');
-
-    // Create expenses table
     await db.execute('''
       CREATE TABLE expenses (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,21 +59,62 @@ class DatabaseHelper {
 
   Future<int> updateCategory(Category category) async {
     final db = await database;
-    return await db.update(
-      'categories',
-      category.toMap(),
-      where: 'id = ?',
-      whereArgs: [category.id],
-    );
+    return await db.update('categories', category.toMap(),
+        where: 'id = ?', whereArgs: [category.id]);
   }
 
   Future<int> deleteCategory(int id) async {
     final db = await database;
-    return await db.delete(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('categories', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Ανάκτηση ή δημιουργία της κατηγορίας "Άγνωστη"
+  Future<int> getOrCreateUnknownCategory() async {
+    final db = await database;
+    final existing = await db.query('categories',
+        where: 'name = ?', whereArgs: ['Άγνωστη']);
+    if (existing.isNotEmpty) {
+      return existing.first['id'] as int;
+    }
+    return await db.insert('categories', {
+      'name': 'Άγνωστη',
+      'description': 'Έξοδα χωρίς κατηγορία',
+    });
+  }
+
+  Future<void> fixOrphanedExpenses() async {
+  final db = await database;
+  final orphaned = await db.rawQuery('''
+    SELECT DISTINCT e.category_id
+    FROM expenses e
+    LEFT JOIN categories c ON e.category_id = c.id
+    WHERE c.id IS NULL
+  ''');
+
+  if (orphaned.isEmpty) return;
+
+  final unknownId = await getOrCreateUnknownCategory();
+  for (final row in orphaned) {
+    final oldId = row['category_id'] as int;
+    await db.update('expenses', {'category_id': unknownId},
+        where: 'category_id = ?', whereArgs: [oldId]);
+  }
+}
+
+  // Μετακίνηση εξόδων από μία κατηγορία σε άλλη
+  Future<void> moveExpensesToCategory(int fromId, int toId) async {
+    final db = await database;
+    await db.update('expenses', {'category_id': toId},
+        where: 'category_id = ?', whereArgs: [fromId]);
+  }
+
+  // Αριθμός εξόδων ανά κατηγορία
+  Future<int> getExpenseCountForCategory(int categoryId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM expenses WHERE category_id = ?',
+        [categoryId]);
+    return result.first['count'] as int;
   }
 
   // ─── EXPENSE CRUD ────────────────────────────────────────────
@@ -100,26 +132,17 @@ class DatabaseHelper {
 
   Future<int> updateExpense(Expense expense) async {
     final db = await database;
-    return await db.update(
-      'expenses',
-      expense.toMap(),
-      where: 'id = ?',
-      whereArgs: [expense.id],
-    );
+    return await db.update('expenses', expense.toMap(),
+        where: 'id = ?', whereArgs: [expense.id]);
   }
 
   Future<int> deleteExpense(int id) async {
     final db = await database;
-    return await db.delete(
-      'expenses',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
   }
 
   // ─── ANALYSIS QUERY ──────────────────────────────────────────
 
-  // Returns totals per category between two dates, sorted descending
   Future<List<Map<String, dynamic>>> getExpensesByCategory(
       String startDate, String endDate) async {
     final db = await database;

@@ -403,22 +403,47 @@ class _ExpensesScreenState extends State<ExpensesScreen>
           ),
         ],
       ),
-      body: _expenses.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.receipt_long_outlined,
-                      size: 72, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
-                  const Text('Δεν υπάρχουν έξοδα ακόμα.',
-                      style: TextStyle(fontSize: 16, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  const Text('Προσθέστε ένα.',
-                      style: TextStyle(fontSize: 13, color: Colors.grey)),
-                ],
-              ),
-            )
+    body: _expenses.isEmpty
+    ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long_outlined,
+                size: 72, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            const Text('Δεν υπάρχουν έξοδα ακόμα.',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey)),
+            const SizedBox(height: 8),
+            const Text(
+                'Καταγράψτε τα καθημερινά σας έξοδα\nγια να παρακολουθείτε τις δαπάνες σας.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.grey)),
+          const SizedBox(height: 16),
+Container(
+  padding: const EdgeInsets.symmetric(
+      horizontal: 20, vertical: 10),
+  decoration: BoxDecoration(
+    color: const Color(0xFFEEF0FF),
+    borderRadius: BorderRadius.circular(12),
+  ),
+  child: const Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(Icons.touch_app_outlined,
+          color: Color(0xFF3949AB), size: 18),
+      SizedBox(width: 8),
+      Text('Πιέστε + για να ξεκινήσετε',
+          style: TextStyle(
+              fontSize: 12, color: Color(0xFF3949AB))),
+    ],
+  ),
+),
+          ],
+        ),
+      )
           : Column(
               children: [
                 const SizedBox(height: 12),
