@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3949AB)),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF5F6FA),
+        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
       ),
       home: const SplashScreen(),
     );
@@ -67,9 +67,16 @@ class _MainScreenState extends State<MainScreen> {
     return Drawer(
       child: Column(
         children: [
+          // Gradient header
           Container(
             width: double.infinity,
-            color: const Color(0xFF3949AB),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+              ),
+            ),
             padding: const EdgeInsets.fromLTRB(16, 56, 16, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,6 +87,8 @@ class _MainScreenState extends State<MainScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(26),
+                    border: Border.all(
+                        color: Colors.white.withOpacity(0.3), width: 1.5),
                   ),
                   child: const Icon(Icons.person,
                       color: Colors.white, size: 28),
@@ -174,7 +183,7 @@ class _MainScreenState extends State<MainScreen> {
       selectedItemColor: const Color(0xFF3949AB),
       unselectedItemColor: Colors.grey,
       backgroundColor: Colors.white,
-      elevation: 8,
+      elevation: 12,
       onTap: (i) => setState(() => _currentIndex = i),
       items: const [
         BottomNavigationBarItem(

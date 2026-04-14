@@ -77,9 +77,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+            ),
+          ),
+        ),
         title: const Text('Ανάλυση',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF3949AB),
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
@@ -88,12 +97,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date pickers
             Row(children: [
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
-                  label: Text(_startDate == null ? 'Ημ/νία έναρξης' : _fmt(_startDate!)),
+                  label: Text(_startDate == null
+                      ? 'Ημ/νία έναρξης'
+                      : _fmt(_startDate!)),
                   onPressed: _pickStart,
                 ),
               ),
@@ -101,7 +111,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.calendar_today),
-                  label: Text(_endDate == null ? 'Ημ/νία λήξης' : _fmt(_endDate!)),
+                  label: Text(_endDate == null
+                      ? 'Ημ/νία λήξης'
+                      : _fmt(_endDate!)),
                   onPressed: _pickEnd,
                 ),
               ),
@@ -109,19 +121,28 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.bar_chart),
-                label: const Text('Ανάλυση'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3949AB),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14)),
-                onPressed: _analyze,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.bar_chart, color: Colors.white),
+                  label: const Text('Ανάλυση',
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: _analyze,
+                ),
               ),
             ),
             const SizedBox(height: 24),
 
-            // Empty state
             if (_searched && _results.isEmpty)
               Center(
                 child: Padding(
@@ -148,14 +169,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
               ),
 
-            // Results
             if (_results.isNotEmpty) ...[
-              // Total
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF0FF),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -164,18 +185,17 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     const Text('Σύνολο περιόδου',
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF3949AB))),
+                            color: Colors.white)),
                     Text('€${total.toStringAsFixed(2)}',
                         style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF3949AB))),
+                            color: Colors.white)),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Pie chart
               const Text('ΚΑΤΑΝΟΜΗ ΕΞΟΔΩΝ',
                   style: TextStyle(
                       fontSize: 12,
@@ -226,7 +246,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Legend
               Wrap(
                 spacing: 12,
                 runSpacing: 8,
@@ -237,8 +256,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 12,
-                        height: 12,
+                        width: 12, height: 12,
                         decoration: BoxDecoration(
                           color: _chartColors[i % _chartColors.length],
                           shape: BoxShape.circle,
@@ -253,7 +271,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Category breakdown
               const Text('ΑΝΑΛΥΣΗ ΑΝΑ ΚΑΤΗΓΟΡΙΑ',
                   style: TextStyle(
                       fontSize: 12,
@@ -272,6 +289,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border(
+                      left: BorderSide(
+                          color: _chartColors[i % _chartColors.length],
+                          width: 4),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.05),
@@ -288,8 +310,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         children: [
                           Row(children: [
                             Container(
-                              width: 12,
-                              height: 12,
+                              width: 12, height: 12,
                               decoration: BoxDecoration(
                                 color: _chartColors[i % _chartColors.length],
                                 shape: BoxShape.circle,
@@ -320,8 +341,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text('${(percent * 100).toStringAsFixed(1)}% του συνόλου',
-                          style: const TextStyle(
-                              color: Colors.grey, fontSize: 12)),
+                          style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     ],
                   ),
                 );
