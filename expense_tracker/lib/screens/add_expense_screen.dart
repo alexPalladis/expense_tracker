@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import '../db/database_helper.dart';
 import '../models/category.dart';
 import '../models/expense.dart';
+import '../widgets/section_header.dart';
 import 'categories_screen.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -62,8 +63,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       }
       if (permission == LocationPermission.deniedForever) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Η άδεια τοποθεσίας απορρίφθηκε.')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Η άδεια τοποθεσίας απορρίφθηκε.')));
         }
         setState(() => _loadingLocation = false);
         return;
@@ -107,8 +108,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       return;
     }
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Επιλέξτε κατηγορία')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Επιλέξτε κατηγορία')));
       return;
     }
 
@@ -151,8 +152,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ),
           backgroundColor: Colors.green.shade600,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 2),
         ),
@@ -160,38 +161,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       await Future.delayed(const Duration(milliseconds: 300));
       Navigator.pop(context, true);
     }
-  }
-
-  // Section header με gradient accent bar
-  Widget _sectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 16,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
-              ),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(icon, size: 16, color: const Color(0xFF3949AB)),
-          const SizedBox(width: 6),
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF3949AB),
-                  letterSpacing: 0.5)),
-        ],
-      ),
-    );
   }
 
   Widget _card({required Widget child}) {
@@ -284,16 +253,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // ── Βασικά Στοιχεία ──
-                  _sectionHeader('ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ', Icons.edit_outlined),
+                  const SectionHeader(
+                      title: 'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ',
+                      icon: Icons.edit_outlined),
                   _card(
                     child: Column(
                       children: [
                         TextField(
                           controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
+                          keyboardType:
+                              const TextInputType.numberWithOptions(
+                                  decimal: true),
                           onChanged: (_) => setState(() {}),
                           decoration: InputDecoration(
                             labelText: 'Ποσό (€) *',
@@ -330,7 +301,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   const SizedBox(height: 20),
 
                   // ── Κατηγορία ──
-                  _sectionHeader('ΚΑΤΗΓΟΡΙΑ', Icons.label_outline),
+                  const SectionHeader(
+                      title: 'ΚΑΤΗΓΟΡΙΑ', icon: Icons.label_outline),
                   _card(
                     child: _categories.isEmpty
                         ? ElevatedButton.icon(
@@ -374,8 +346,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   const SizedBox(height: 20),
 
                   // ── Ημερομηνία ──
-                  _sectionHeader(
-                      'ΗΜΕΡΟΜΗΝΙΑ', Icons.calendar_today_outlined),
+                  const SectionHeader(
+                      title: 'ΗΜΕΡΟΜΗΝΙΑ',
+                      icon: Icons.calendar_today_outlined),
                   _card(
                     child: Row(
                       children: [
@@ -384,7 +357,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           height: 44,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                              colors: [
+                                Color(0xFF3949AB),
+                                Color(0xFF1E88E5)
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -421,7 +397,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   const SizedBox(height: 20),
 
                   // ── Τοποθεσία ──
-                  _sectionHeader('ΤΟΠΟΘΕΣΙΑ', Icons.place_outlined),
+                  const SectionHeader(
+                      title: 'ΤΟΠΟΘΕΣΙΑ',
+                      icon: Icons.place_outlined),
                   _card(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,7 +510,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF3949AB).withOpacity(0.4),
+                          color:
+                              const Color(0xFF3949AB).withOpacity(0.4),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         )
@@ -551,7 +530,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                       ),

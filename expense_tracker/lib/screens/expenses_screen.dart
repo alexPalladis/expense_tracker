@@ -3,6 +3,11 @@ import '../db/database_helper.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
 import '../utils/category_style.dart';
+import '../widgets/animated_list_card.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/expense_card.dart';
+import '../widgets/gradient_fab.dart';
+import '../widgets/shimmer_card.dart';
 import 'add_expense_screen.dart';
 
 enum SortOption { date, amount, category }
@@ -67,7 +72,9 @@ class _ExpensesScreenState extends State<ExpensesScreen>
   List<Expense> get _filteredAndSorted {
     List<Expense> list = _selectedCategoryId == null
         ? List.from(_expenses)
-        : _expenses.where((e) => e.categoryId == _selectedCategoryId).toList();
+        : _expenses
+            .where((e) => e.categoryId == _selectedCategoryId)
+            .toList();
     switch (_sortOption) {
       case SortOption.date:
         list.sort((a, b) => b.date.compareTo(a.date));
@@ -163,8 +170,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
       trailing: isSelected
           ? const Icon(Icons.check_circle, color: Color(0xFF3949AB))
           : null,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       tileColor: isSelected ? const Color(0xFFEEF0FF) : null,
       onTap: () {
         setState(() => _sortOption = option);
@@ -229,8 +236,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                   style.color,
                 ],
               ),
-              borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
             child: Column(
@@ -289,7 +296,6 @@ class _ExpensesScreenState extends State<ExpensesScreen>
               ],
             ),
           ),
-          // Details body
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -307,8 +313,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                 if (expense.latitude != null) ...[
                   const SizedBox(height: 8),
                   Row(children: [
-                    const Icon(Icons.place,
-                        size: 14, color: Colors.grey),
+                    const Icon(Icons.place, size: 14, color: Colors.grey),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -330,8 +335,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                         await Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => AddExpenseScreen(
-                                    existing: expense)));
+                                builder: (_) =>
+                                    AddExpenseScreen(existing: expense)));
                         _loadData();
                       },
                     ),
@@ -361,34 +366,6 @@ class _ExpensesScreenState extends State<ExpensesScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildShimmer() {
-    return Column(
-      children: [
-        const SizedBox(height: 12),
-        Container(
-          height: 44,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              colors: [
-                Colors.grey.shade200,
-                Colors.grey.shade100,
-                Colors.grey.shade200
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...List.generate(
-          5,
-          (i) => _ShimmerExpenseCard(
-              delay: Duration(milliseconds: i * 80)),
-        ),
-      ],
     );
   }
 
@@ -445,12 +422,9 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                     _selectedCategoryId = isSelected ? null : cat.id),
                 selectedColor: const Color(0xFF3949AB),
                 labelStyle: TextStyle(
-                  color: isSelected
-                      ? Colors.white
-                      : Colors.grey.shade700,
-                  fontWeight: isSelected
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
                 backgroundColor: style.color,
                 shape: RoundedRectangleBorder(
@@ -509,8 +483,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
             padding: const EdgeInsets.only(right: 8),
             child: TextButton.icon(
               onPressed: _showSortOptions,
-              icon: const Icon(Icons.sort,
-                  color: Colors.white, size: 18),
+              icon: const Icon(Icons.sort, color: Colors.white, size: 18),
               label: Text(_sortLabel,
                   style: const TextStyle(
                       color: Colors.white, fontSize: 12)),
@@ -519,48 +492,32 @@ class _ExpensesScreenState extends State<ExpensesScreen>
         ],
       ),
       body: _loading
-          ? _buildShimmer()
+          ? Column(children: [
+              const SizedBox(height: 12),
+              Container(
+                height: 44,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(colors: [
+                    Colors.grey.shade200,
+                    Colors.grey.shade100,
+                    Colors.grey.shade200
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...List.generate(5, (_) => const ShimmerCard()),
+            ])
           : _expenses.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.receipt_long_outlined,
-                          size: 72, color: Colors.grey.shade300),
-                      const SizedBox(height: 16),
-                      const Text('Δεν υπάρχουν έξοδα ακόμα.',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey)),
-                      const SizedBox(height: 8),
-                      const Text(
-                          'Καταγράψτε τα καθημερινά σας έξοδα\nγια να παρακολουθείτε τις δαπάνες σας.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey)),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEEF0FF),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.touch_app_outlined,
-                                color: Color(0xFF3949AB), size: 18),
-                            SizedBox(width: 8),
-                            Text('Πιέστε + για να ξεκινήσετε',
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF3949AB))),
-                          ],
-                        ),
-                      ),
-                    ],
+              ? EmptyState(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Δεν υπάρχουν έξοδα ακόμα.',
+                  subtitle:
+                      'Καταγράψτε τα καθημερινά σας έξοδα\nγια να παρακολουθείτε τις δαπάνες σας.',
+                  hint: const HintChip(
+                    icon: Icons.touch_app_outlined,
+                    text: 'Πιέστε + για να ξεκινήσετε',
                   ),
                 )
               : Column(
@@ -570,25 +527,10 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                     const SizedBox(height: 8),
                     if (filtered.isEmpty)
                       Expanded(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.filter_list_off,
-                                  size: 64,
-                                  color: Colors.grey.shade300),
-                              const SizedBox(height: 16),
-                              const Text('Δεν υπάρχουν έξοδα',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey)),
-                              const SizedBox(height: 8),
-                              const Text('για αυτή την κατηγορία.',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey)),
-                            ],
-                          ),
+                        child: EmptyState(
+                          icon: Icons.filter_list_off,
+                          title: 'Δεν υπάρχουν έξοδα',
+                          subtitle: 'για αυτή την κατηγορία.',
                         ),
                       )
                     else
@@ -596,24 +538,22 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                         child: RefreshIndicator(
                           onRefresh: _loadData,
                           child: ListView.builder(
-                            padding:
-                                const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.only(bottom: 12),
                             itemCount: keys.length,
                             itemBuilder: (ctx, groupIndex) {
                               final dayKey = keys[groupIndex];
                               final dayExpenses = grouped[dayKey]!;
-                              final dayTotal =
-                                  dayExpenses.fold<double>(
-                                      0, (sum, e) => sum + e.amount);
+                              final dayTotal = dayExpenses.fold<double>(
+                                  0, (sum, e) => sum + e.amount);
 
                               return Column(
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
                                 children: [
+                                  // Day header with dividers
                                   Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(
-                                            16, 12, 16, 8),
+                                    padding: const EdgeInsets.fromLTRB(
+                                        16, 12, 16, 8),
                                     child: Row(
                                       children: [
                                         Expanded(
@@ -621,8 +561,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                                             Container(
                                                 width: 20,
                                                 height: 1,
-                                                color: Colors
-                                                    .grey.shade300),
+                                                color: Colors.grey.shade300),
                                             const SizedBox(width: 8),
                                             Text(dayKey,
                                                 style: const TextStyle(
@@ -635,8 +574,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                                             Expanded(
                                                 child: Container(
                                                     height: 1,
-                                                    color: Colors.grey
-                                                        .shade300)),
+                                                    color: Colors
+                                                        .grey.shade300)),
                                           ]),
                                         ),
                                         const SizedBox(width: 8),
@@ -644,158 +583,81 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                                             '€${dayTotal.toStringAsFixed(2)}',
                                             style: const TextStyle(
                                                 fontSize: 13,
-                                                fontWeight:
-                                                    FontWeight.bold,
-                                                color:
-                                                    Color(0xFF3949AB))),
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF3949AB))),
                                       ],
                                     ),
                                   ),
-                                  ...dayExpenses.asMap().entries.map(
-                                    (entry) {
-                                      final e = entry.value;
-                                      final globalIndex =
-                                          allExpenses.indexOf(e);
-                                      final delay = Duration(
-                                          milliseconds: 50 *
-                                              globalIndex.clamp(0, 20));
-                                      final style = getCategoryStyle(
-                                          _categoryName(e.categoryId));
+                                  ...dayExpenses.asMap().entries.map((entry) {
+                                    final e = entry.value;
+                                    final globalIndex =
+                                        allExpenses.indexOf(e);
+                                    final delay = Duration(
+                                        milliseconds:
+                                            50 * globalIndex.clamp(0, 20));
+                                    final style = getCategoryStyle(
+                                        _categoryName(e.categoryId));
 
-                                      return _AnimatedExpenseCard(
-                                        key: Key(e.id.toString()),
-                                        delay: delay,
-                                        child: Dismissible(
-                                          key: ValueKey(
-                                              '${e.id}_dismiss'),
-                                          direction: DismissDirection
-                                              .endToStart,
-                                          confirmDismiss: (direction) =>
-                                              _confirmDelete(context),
-                                          onDismissed:
-                                              (direction) async {
-                                            await DatabaseHelper
-                                                .instance
-                                                .deleteExpense(e.id!);
-                                            _loadData();
-                                          },
-                                          background: Container(
-                                            margin:
-                                                const EdgeInsets.fromLTRB(
-                                                    16, 0, 16, 8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      14),
-                                            ),
-                                            alignment:
-                                                Alignment.centerRight,
-                                            padding:
-                                                const EdgeInsets.only(
-                                                    right: 20),
-                                            child: const Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .center,
-                                              children: [
-                                                Icon(Icons.delete,
-                                                    color: Colors.white,
-                                                    size: 26),
-                                                SizedBox(height: 4),
-                                                Text('Διαγραφή',
-                                                    style: TextStyle(
-                                                        color:
-                                                            Colors.white,
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight
-                                                                .bold)),
-                                              ],
-                                            ),
+                                    return AnimatedListCard(
+                                      key: Key(e.id.toString()),
+                                      delay: delay,
+                                      child: Dismissible(
+                                        key: ValueKey('${e.id}_dismiss'),
+                                        direction:
+                                            DismissDirection.endToStart,
+                                        confirmDismiss: (direction) =>
+                                            _confirmDelete(context),
+                                        onDismissed: (direction) async {
+                                          await DatabaseHelper.instance
+                                              .deleteExpense(e.id!);
+                                          _loadData();
+                                        },
+                                        background: Container(
+                                          margin: const EdgeInsets.fromLTRB(
+                                              16, 0, 16, 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            borderRadius:
+                                                BorderRadius.circular(14),
                                           ),
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsets.fromLTRB(
-                                                    16, 0, 16, 8),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        14),
-                                                border: Border(
-                                                  left: BorderSide(
-                                                      color: style.color
-                                                          .withOpacity(
-                                                              0.8),
-                                                      width: 4),
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(
-                                                            0.05),
-                                                    blurRadius: 10,
-                                                    offset: const Offset(
-                                                        0, 3),
-                                                  )
-                                                ],
-                                              ),
-                                              child: ListTile(
-                                                onTap: () =>
-                                                    _showDetail(e),
-                                                contentPadding:
-                                                    const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 4),
-                                                leading: Container(
-                                                  width: 42,
-                                                  height: 42,
-                                                  decoration: BoxDecoration(
-                                                    color: style.color,
-                                                    borderRadius:
-                                                        BorderRadius
-                                                            .circular(12),
-                                                  ),
-                                                  child: Icon(style.icon,
-                                                      color: const Color(
-                                                          0xFF3949AB),
-                                                      size: 20),
-                                                ),
-                                                title: Text(
-                                                  e.description ??
-                                                      _categoryName(
-                                                          e.categoryId),
-                                                  style: const TextStyle(
+                                          alignment: Alignment.centerRight,
+                                          padding: const EdgeInsets.only(
+                                              right: 20),
+                                          child: const Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.delete,
+                                                  color: Colors.white,
+                                                  size: 26),
+                                              SizedBox(height: 4),
+                                              Text('Διαγραφή',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 11,
                                                       fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 14),
-                                                ),
-                                                subtitle: Text(
-                                                  _categoryName(
-                                                      e.categoryId),
-                                                  style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey),
-                                                ),
-                                                trailing: Text(
-                                                  '€${e.amount.toStringAsFixed(2)}',
-                                                  style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15,
-                                                      color: Color(
-                                                          0xFF3949AB)),
-                                                ),
-                                              ),
-                                            ),
+                                                          FontWeight.bold)),
+                                            ],
                                           ),
                                         ),
-                                      );
-                                    },
-                                  ),
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.fromLTRB(
+                                                  16, 0, 16, 8),
+                                          child: ExpenseCard(
+                                            title: e.description ??
+                                                _categoryName(e.categoryId),
+                                            subtitle: _categoryName(
+                                                e.categoryId),
+                                            amount:
+                                                '€${e.amount.toStringAsFixed(2)}',
+                                            style: style,
+                                            onTap: () => _showDetail(e),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
                                 ],
                               );
                             },
@@ -806,151 +668,15 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                 ),
       floatingActionButton: ScaleTransition(
         scale: _fabAnimation,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF3949AB).withOpacity(0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              )
-            ],
-          ),
-          child: FloatingActionButton(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
-            onPressed: () async {
-              await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AddExpenseScreen()));
-              _loadData();
-            },
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
+        child: GradientFab(
+          onPressed: () async {
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AddExpenseScreen()));
+            _loadData();
+          },
         ),
-      ),
-    );
-  }
-}
-
-// ── Slide-in animation widget ──
-class _AnimatedExpenseCard extends StatefulWidget {
-  final Widget child;
-  final Duration delay;
-
-  const _AnimatedExpenseCard({
-    super.key,
-    required this.child,
-    required this.delay,
-  });
-
-  @override
-  State<_AnimatedExpenseCard> createState() =>
-      _AnimatedExpenseCardState();
-}
-
-class _AnimatedExpenseCardState extends State<_AnimatedExpenseCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<Offset> _slide;
-  late Animation<double> _fade;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 350));
-    _slide = Tween<Offset>(
-      begin: const Offset(0.3, 0),
-      end: Offset.zero,
-    ).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-    _fade = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
-
-    Future.delayed(widget.delay, () {
-      if (mounted) _ctrl.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(position: _slide, child: widget.child),
-    );
-  }
-}
-
-// ── Shimmer card widget ──
-class _ShimmerExpenseCard extends StatefulWidget {
-  final Duration delay;
-  const _ShimmerExpenseCard({required this.delay});
-
-  @override
-  State<_ShimmerExpenseCard> createState() =>
-      _ShimmerExpenseCardState();
-}
-
-class _ShimmerExpenseCardState extends State<_ShimmerExpenseCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1200))
-      ..repeat();
-    _anim = Tween<double>(begin: -1, end: 2).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: AnimatedBuilder(
-        animation: _anim,
-        builder: (context, child) {
-          return Container(
-            height: 72,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: LinearGradient(
-                begin: Alignment(_anim.value - 1, 0),
-                end: Alignment(_anim.value, 0),
-                colors: [
-                  Colors.grey.shade200,
-                  Colors.grey.shade100,
-                  Colors.grey.shade200,
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
 import '../models/category.dart';
 import '../utils/category_style.dart';
+import '../widgets/animated_list_card.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/gradient_fab.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -108,7 +111,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               Navigator.pop(ctx);
               _loadCategories();
             },
-            child: Text(existing == null ? 'Προσθήκη' : 'Αποθήκευση'),
+            child:
+                Text(existing == null ? 'Προσθήκη' : 'Αποθήκευση'),
           ),
         ],
       ),
@@ -237,63 +241,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       ),
       floatingActionButton: _categories.isEmpty
           ? null
-          : Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF3949AB).withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              child: FloatingActionButton(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                onPressed: () => _showCategoryDialog(),
-                child: const Icon(Icons.add, color: Colors.white),
-              ),
-            ),
+          : GradientFab(onPressed: () => _showCategoryDialog()),
       body: _categories.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.label_off_outlined,
-                      size: 72, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
-                  const Text('Καμία κατηγορία ακόμα.',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  const Text(
-                      'Δημιουργήστε κατηγορίες για να οργανώσετε\nτα έξοδά σας.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.grey)),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.add),
-                    label: const Text('Προσθήκη κατηγορίας'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3949AB),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () => _showCategoryDialog(),
-                  ),
-                ],
-              ),
+          ? EmptyState(
+              icon: Icons.label_off_outlined,
+              title: 'Καμία κατηγορία ακόμα.',
+              subtitle:
+                  'Δημιουργήστε κατηγορίες για να οργανώσετε\nτα έξοδά σας.',
+              buttonLabel: 'Προσθήκη κατηγορίας',
+              onButtonPressed: () => _showCategoryDialog(),
             )
           : Column(
               children: [
@@ -344,7 +300,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       final delay =
                           Duration(milliseconds: 60 * i.clamp(0, 15));
 
-                      return _AnimatedCategoryCard(
+                      return AnimatedListCard(
                         key: Key(cat.id.toString()),
                         delay: delay,
                         child: Dismissible(
@@ -406,8 +362,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             decoration: BoxDecoration(
                               color: style.color.withOpacity(0.3),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                  color: style.color, width: 1.5),
+                              border:
+                                  Border.all(color: style.color, width: 1.5),
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
@@ -417,8 +373,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                 height: 46,
                                 decoration: BoxDecoration(
                                   color: style.color,
-                                  borderRadius:
-                                      BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(style.icon,
                                     color: const Color(0xFF3949AB),
@@ -431,14 +386,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               subtitle: cat.description != null
                                   ? Text(cat.description!,
                                       style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey))
+                                          fontSize: 12, color: Colors.grey))
                                   : null,
                               trailing: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.end,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
                                     '€${total.toStringAsFixed(2)}',
@@ -451,8 +403,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                   Text(
                                     '$count ${count == 1 ? 'έξοδο' : 'έξοδα'}',
                                     style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey),
+                                        fontSize: 11, color: Colors.grey),
                                   ),
                                 ],
                               ),
@@ -465,60 +416,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _AnimatedCategoryCard extends StatefulWidget {
-  final Widget child;
-  final Duration delay;
-
-  const _AnimatedCategoryCard({
-    super.key,
-    required this.child,
-    required this.delay,
-  });
-
-  @override
-  State<_AnimatedCategoryCard> createState() =>
-      _AnimatedCategoryCardState();
-}
-
-class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<Offset> _slide;
-  late Animation<double> _fade;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 350));
-    _slide = Tween<Offset>(
-      begin: const Offset(0.3, 0),
-      end: Offset.zero,
-    ).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-    _fade = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
-
-    Future.delayed(widget.delay, () {
-      if (mounted) _ctrl.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(position: _slide, child: widget.child),
     );
   }
 }
