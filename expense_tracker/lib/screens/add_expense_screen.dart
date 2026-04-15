@@ -143,8 +143,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(width: 10),
               Text(
                 widget.existing == null
-                    ? '✓ Το έξοδο αποθηκεύτηκε!'
-                    : '✓ Το έξοδο ενημερώθηκε!',
+                    ? 'Το έξοδο αποθηκεύτηκε!'
+                    : 'Το έξοδο ενημερώθηκε!',
                 style: const TextStyle(
                     color: Colors.white, fontWeight: FontWeight.w600),
               ),
