@@ -20,6 +20,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
   List<Category> _categories = [];
   int? _selectedCategoryId;
   SortOption _sortOption = SortOption.date;
+  bool _loading = true;
 
   late AnimationController _fabController;
   late Animation<double> _fabAnimation;
@@ -44,11 +45,13 @@ class _ExpensesScreenState extends State<ExpensesScreen>
   }
 
   Future<void> _loadData() async {
+    setState(() => _loading = true);
     final expenses = await DatabaseHelper.instance.getAllExpenses();
     final categories = await DatabaseHelper.instance.getAllCategories();
     setState(() {
       _expenses = expenses;
       _categories = categories;
+      _loading = false;
     });
     _fabController.forward(from: 0);
   }
@@ -73,8 +76,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
         list.sort((a, b) => b.amount.compareTo(a.amount));
         break;
       case SortOption.category:
-        list.sort((a, b) =>
-            _categoryName(a.categoryId).compareTo(_categoryName(b.categoryId)));
+        list.sort((a, b) => _categoryName(a.categoryId)
+            .compareTo(_categoryName(b.categoryId)));
         break;
     }
     return list;
@@ -89,9 +92,13 @@ class _ExpensesScreenState extends State<ExpensesScreen>
       final date = DateTime.parse(e.date);
       final now = DateTime.now();
       String key;
-      if (date.year == now.year && date.month == now.month && date.day == now.day) {
+      if (date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day) {
         key = 'Σήμερα';
-      } else if (date.year == now.year && date.month == now.month && date.day == now.day - 1) {
+      } else if (date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day - 1) {
         key = 'Χθες';
       } else {
         key = '${date.day}/${date.month}/${date.year}';
@@ -113,7 +120,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Ταξινόμηση',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                style:
+                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             _sortTile(ctx, SortOption.date, Icons.calendar_today_outlined,
                 'Κατά ημερομηνία', 'Νεότερα πρώτα'),
@@ -133,21 +141,35 @@ class _ExpensesScreenState extends State<ExpensesScreen>
     final isSelected = _sortOption == option;
     return ListTile(
       leading: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF3949AB) : const Color(0xFFEEF0FF),
+          color: isSelected
+              ? const Color(0xFF3949AB)
+              : const Color(0xFFEEF0FF),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon,
-            color: isSelected ? Colors.white : const Color(0xFF3949AB), size: 20),
+            color:
+                isSelected ? Colors.white : const Color(0xFF3949AB),
+            size: 20),
       ),
       title: Text(title,
-          style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      trailing: isSelected ? const Icon(Icons.check_circle, color: Color(0xFF3949AB)) : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          style: TextStyle(
+              fontWeight:
+                  isSelected ? FontWeight.bold : FontWeight.normal)),
+      subtitle: Text(subtitle,
+          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      trailing: isSelected
+          ? const Icon(Icons.check_circle, color: Color(0xFF3949AB))
+          : null,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12)),
       tileColor: isSelected ? const Color(0xFFEEF0FF) : null,
-      onTap: () { setState(() => _sortOption = option); Navigator.pop(ctx); },
+      onTap: () {
+        setState(() => _sortOption = option);
+        Navigator.pop(ctx);
+      },
     );
   }
 
@@ -155,19 +177,27 @@ class _ExpensesScreenState extends State<ExpensesScreen>
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         title: const Row(children: [
           Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
           SizedBox(width: 8),
-          Expanded(child: Text('Διαγραφή εξόδου', style: TextStyle(fontSize: 16))),
+          Expanded(
+              child: Text('Διαγραφή εξόδου',
+                  style: TextStyle(fontSize: 16))),
         ]),
-        content: const Text('Είστε σίγουροι για τη διαγραφή αυτού του εξόδου;'),
+        content: const Text(
+            'Είστε σίγουροι για τη διαγραφή αυτού του εξόδου;'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Άκυρο')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Άκυρο')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8))),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Διαγραφή'),
           ),
@@ -181,90 +211,184 @@ class _ExpensesScreenState extends State<ExpensesScreen>
     final style = getCategoryStyle(_categoryName(expense.categoryId));
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Color accent top bar
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: style.color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Gradient header
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  style.color.withOpacity(0.8),
+                  style.color,
+                ],
               ),
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20)),
             ),
-            const SizedBox(height: 16),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('€${expense.amount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              Chip(
-                label: Text(_categoryName(expense.categoryId)),
-                backgroundColor: style.color,
-                labelStyle: const TextStyle(color: Color(0xFF3949AB)),
-              ),
-            ]),
-            const SizedBox(height: 8),
-            if (expense.description != null)
-              Text(expense.description!, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 8),
-            Row(children: [
-              const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-              const SizedBox(width: 6),
-              Text(
-                '${date.day}/${date.month}/${date.year}  ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
-                style: const TextStyle(color: Colors.grey)),
-            ]),
-            if (expense.latitude != null) ...[
-              const SizedBox(height: 4),
-              Row(children: [
-                const Icon(Icons.place, size: 14, color: Colors.grey),
-                const SizedBox(width: 6),
-                Text(
-                  '${expense.locationName ?? ''}  (${expense.latitude!.toStringAsFixed(4)}, ${expense.longitude!.toStringAsFixed(4)})',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13)),
-              ]),
-            ],
-            const SizedBox(height: 20),
-            Row(children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Επεξεργασία'),
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    await Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => AddExpenseScreen(existing: expense)));
-                    _loadData();
-                  },
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Διαγραφή'),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red, foregroundColor: Colors.white),
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    final confirm = await _confirmDelete(context);
-                    if (confirm == true) {
-                      await DatabaseHelper.instance.deleteExpense(expense.id!);
-                      _loadData();
-                    }
-                  },
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '€${expense.amount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.4),
+                            width: 1),
+                      ),
+                      child: Text(
+                        _categoryName(expense.categoryId),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ]),
-          ],
-        ),
+                if (expense.description != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    expense.description!,
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.85),
+                        fontSize: 14),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // Details body
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${date.day}/${date.month}/${date.year}  ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ]),
+                if (expense.latitude != null) ...[
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    const Icon(Icons.place,
+                        size: 14, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${expense.locationName ?? ''}  (${expense.latitude!.toStringAsFixed(4)}, ${expense.longitude!.toStringAsFixed(4)})',
+                        style: const TextStyle(
+                            color: Colors.grey, fontSize: 13),
+                      ),
+                    ),
+                  ]),
+                ],
+                const SizedBox(height: 20),
+                Row(children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Επεξεργασία'),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => AddExpenseScreen(
+                                    existing: expense)));
+                        _loadData();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Διαγραφή'),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        final confirm = await _confirmDelete(context);
+                        if (confirm == true) {
+                          await DatabaseHelper.instance
+                              .deleteExpense(expense.id!);
+                          _loadData();
+                        }
+                      },
+                    ),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildShimmer() {
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        Container(
+          height: 44,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                Colors.grey.shade200,
+                Colors.grey.shade100,
+                Colors.grey.shade200
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(
+          5,
+          (i) => _ShimmerExpenseCard(
+              delay: Duration(milliseconds: i * 80)),
+        ),
+      ],
     );
   }
 
@@ -281,17 +405,24 @@ class _ExpensesScreenState extends State<ExpensesScreen>
               label: const Text('Όλα'),
               selected: _selectedCategoryId == null,
               showCheckmark: false,
-              onSelected: (_) => setState(() => _selectedCategoryId = null),
+              onSelected: (_) =>
+                  setState(() => _selectedCategoryId = null),
               selectedColor: const Color(0xFF3949AB),
               labelStyle: TextStyle(
-                color: _selectedCategoryId == null ? Colors.white : Colors.grey.shade700,
-                fontWeight: _selectedCategoryId == null ? FontWeight.bold : FontWeight.normal,
+                color: _selectedCategoryId == null
+                    ? Colors.white
+                    : Colors.grey.shade700,
+                fontWeight: _selectedCategoryId == null
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: _selectedCategoryId == null ? const Color(0xFF3949AB) : Colors.grey.shade300,
+                  color: _selectedCategoryId == null
+                      ? const Color(0xFF3949AB)
+                      : Colors.grey.shade300,
                 ),
               ),
             ),
@@ -302,8 +433,11 @@ class _ExpensesScreenState extends State<ExpensesScreen>
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                avatar: Icon(style.icon, size: 16,
-                    color: isSelected ? Colors.white : const Color(0xFF3949AB)),
+                avatar: Icon(style.icon,
+                    size: 16,
+                    color: isSelected
+                        ? Colors.white
+                        : const Color(0xFF3949AB)),
                 label: Text(cat.name),
                 selected: isSelected,
                 showCheckmark: false,
@@ -311,14 +445,20 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                     _selectedCategoryId = isSelected ? null : cat.id),
                 selectedColor: const Color(0xFF3949AB),
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey.shade700,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.grey.shade700,
+                  fontWeight: isSelected
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                 ),
                 backgroundColor: style.color,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                   side: BorderSide(
-                    color: isSelected ? const Color(0xFF3949AB) : Colors.grey.shade300,
+                    color: isSelected
+                        ? const Color(0xFF3949AB)
+                        : Colors.grey.shade300,
                   ),
                 ),
               ),
@@ -331,9 +471,12 @@ class _ExpensesScreenState extends State<ExpensesScreen>
 
   String get _sortLabel {
     switch (_sortOption) {
-      case SortOption.date: return 'Ημερομηνία';
-      case SortOption.amount: return 'Ποσό';
-      case SortOption.category: return 'Κατηγορία';
+      case SortOption.date:
+        return 'Ημερομηνία';
+      case SortOption.amount:
+        return 'Ποσό';
+      case SortOption.category:
+        return 'Κατηγορία';
     }
   }
 
@@ -342,6 +485,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
     final filtered = _filteredAndSorted;
     final grouped = _groupByDay(filtered);
     final keys = grouped.keys.toList();
+    final allExpenses = filtered;
 
     return Scaffold(
       appBar: AppBar(
@@ -355,7 +499,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
           ),
         ),
         title: const Text('Έξοδα',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -364,206 +509,448 @@ class _ExpensesScreenState extends State<ExpensesScreen>
             padding: const EdgeInsets.only(right: 8),
             child: TextButton.icon(
               onPressed: _showSortOptions,
-              icon: const Icon(Icons.sort, color: Colors.white, size: 18),
+              icon: const Icon(Icons.sort,
+                  color: Colors.white, size: 18),
               label: Text(_sortLabel,
-                  style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 12)),
             ),
           ),
         ],
       ),
-      body: _expenses.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.receipt_long_outlined,
-                      size: 72, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
-                  const Text('Δεν υπάρχουν έξοδα ακόμα.',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  const Text('Καταγράψτε τα καθημερινά σας έξοδα\nγια να παρακολουθείτε τις δαπάνες σας.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.grey)),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEEF0FF),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.touch_app_outlined, color: Color(0xFF3949AB), size: 18),
-                        SizedBox(width: 8),
-                        Text('Πιέστε + για να ξεκινήσετε',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF3949AB))),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : Column(
-              children: [
-                const SizedBox(height: 12),
-                _buildChips(),
-                const SizedBox(height: 8),
-                if (filtered.isEmpty)
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.filter_list_off, size: 64, color: Colors.grey.shade300),
-                          const SizedBox(height: 16),
-                          const Text('Δεν υπάρχουν έξοδα', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                          const SizedBox(height: 8),
-                          const Text('για αυτή την κατηγορία.', style: TextStyle(fontSize: 13, color: Colors.grey)),
-                        ],
+      body: _loading
+          ? _buildShimmer()
+          : _expenses.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.receipt_long_outlined,
+                          size: 72, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      const Text('Δεν υπάρχουν έξοδα ακόμα.',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey)),
+                      const SizedBox(height: 8),
+                      const Text(
+                          'Καταγράψτε τα καθημερινά σας έξοδα\nγια να παρακολουθείτε τις δαπάνες σας.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 13, color: Colors.grey)),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF0FF),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.touch_app_outlined,
+                                color: Color(0xFF3949AB), size: 18),
+                            SizedBox(width: 8),
+                            Text('Πιέστε + για να ξεκινήσετε',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF3949AB))),
+                          ],
+                        ),
                       ),
-                    ),
-                  )
-                else
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: _loadData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        itemCount: keys.length,
-                        itemBuilder: (ctx, groupIndex) {
-                          final dayKey = keys[groupIndex];
-                          final dayExpenses = grouped[dayKey]!;
-                          final dayTotal = dayExpenses.fold<double>(0, (sum, e) => sum + e.amount);
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    _buildChips(),
+                    const SizedBox(height: 8),
+                    if (filtered.isEmpty)
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Styled day header with dividers
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Row(children: [
-                                        Container(width: 20, height: 1, color: Colors.grey.shade300),
-                                        const SizedBox(width: 8),
-                                        Text(dayKey,
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.grey,
-                                                letterSpacing: 0.3)),
-                                        const SizedBox(width: 8),
-                                        Expanded(child: Container(height: 1, color: Colors.grey.shade300)),
-                                      ]),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text('€${dayTotal.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF3949AB))),
-                                  ],
-                                ),
-                              ),
-                              ...dayExpenses.map((e) {
-                                final style = getCategoryStyle(_categoryName(e.categoryId));
-                                return Dismissible(
-                                  key: Key(e.id.toString()),
-                                  direction: DismissDirection.endToStart,
-                                  confirmDismiss: (direction) => _confirmDelete(context),
-                                  onDismissed: (direction) async {
-                                    await DatabaseHelper.instance.deleteExpense(e.id!);
-                                    _loadData();
-                                  },
-                                  background: Container(
-                                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red, borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.only(right: 20),
-                                    child: const Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                              Icon(Icons.filter_list_off,
+                                  size: 64,
+                                  color: Colors.grey.shade300),
+                              const SizedBox(height: 16),
+                              const Text('Δεν υπάρχουν έξοδα',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey)),
+                              const SizedBox(height: 8),
+                              const Text('για αυτή την κατηγορία.',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: _loadData,
+                          child: ListView.builder(
+                            padding:
+                                const EdgeInsets.only(bottom: 12),
+                            itemCount: keys.length,
+                            itemBuilder: (ctx, groupIndex) {
+                              final dayKey = keys[groupIndex];
+                              final dayExpenses = grouped[dayKey]!;
+                              final dayTotal =
+                                  dayExpenses.fold<double>(
+                                      0, (sum, e) => sum + e.amount);
+
+                              return Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(
+                                            16, 12, 16, 8),
+                                    child: Row(
                                       children: [
-                                        Icon(Icons.delete, color: Colors.white, size: 26),
-                                        SizedBox(height: 4),
-                                        Text('Διαγραφή',
-                                            style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                        Expanded(
+                                          child: Row(children: [
+                                            Container(
+                                                width: 20,
+                                                height: 1,
+                                                color: Colors
+                                                    .grey.shade300),
+                                            const SizedBox(width: 8),
+                                            Text(dayKey,
+                                                style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight:
+                                                        FontWeight.bold,
+                                                    color: Colors.grey,
+                                                    letterSpacing: 0.3)),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                                child: Container(
+                                                    height: 1,
+                                                    color: Colors.grey
+                                                        .shade300)),
+                                          ]),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                            '€${dayTotal.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight:
+                                                    FontWeight.bold,
+                                                color:
+                                                    Color(0xFF3949AB))),
                                       ],
                                     ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(14),
-                                        // Color accent left border
-                                        border: Border(
-                                          left: BorderSide(
-                                              color: style.color.withOpacity(0.8),
-                                              width: 4),
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.05),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 3),
-                                          )
-                                        ],
-                                      ),
-                                      child: ListTile(
-                                        onTap: () => _showDetail(e),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                        leading: Container(
-                                          width: 42, height: 42,
-                                          decoration: BoxDecoration(
-                                            color: style.color,
-                                            borderRadius: BorderRadius.circular(12),
+                                  ...dayExpenses.asMap().entries.map(
+                                    (entry) {
+                                      final e = entry.value;
+                                      final globalIndex =
+                                          allExpenses.indexOf(e);
+                                      final delay = Duration(
+                                          milliseconds: 50 *
+                                              globalIndex.clamp(0, 20));
+                                      final style = getCategoryStyle(
+                                          _categoryName(e.categoryId));
+
+                                      return _AnimatedExpenseCard(
+                                        key: Key(e.id.toString()),
+                                        delay: delay,
+                                        child: Dismissible(
+                                          key: ValueKey(
+                                              '${e.id}_dismiss'),
+                                          direction: DismissDirection
+                                              .endToStart,
+                                          confirmDismiss: (direction) =>
+                                              _confirmDelete(context),
+                                          onDismissed:
+                                              (direction) async {
+                                            await DatabaseHelper
+                                                .instance
+                                                .deleteExpense(e.id!);
+                                            _loadData();
+                                          },
+                                          background: Container(
+                                            margin:
+                                                const EdgeInsets.fromLTRB(
+                                                    16, 0, 16, 8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      14),
+                                            ),
+                                            alignment:
+                                                Alignment.centerRight,
+                                            padding:
+                                                const EdgeInsets.only(
+                                                    right: 20),
+                                            child: const Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .center,
+                                              children: [
+                                                Icon(Icons.delete,
+                                                    color: Colors.white,
+                                                    size: 26),
+                                                SizedBox(height: 4),
+                                                Text('Διαγραφή',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Colors.white,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight
+                                                                .bold)),
+                                              ],
+                                            ),
                                           ),
-                                          child: Icon(style.icon, color: const Color(0xFF3949AB), size: 20),
+                                          child: Padding(
+                                            padding:
+                                                const EdgeInsets.fromLTRB(
+                                                    16, 0, 16, 8),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        14),
+                                                border: Border(
+                                                  left: BorderSide(
+                                                      color: style.color
+                                                          .withOpacity(
+                                                              0.8),
+                                                      width: 4),
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(
+                                                            0.05),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(
+                                                        0, 3),
+                                                  )
+                                                ],
+                                              ),
+                                              child: ListTile(
+                                                onTap: () =>
+                                                    _showDetail(e),
+                                                contentPadding:
+                                                    const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 4),
+                                                leading: Container(
+                                                  width: 42,
+                                                  height: 42,
+                                                  decoration: BoxDecoration(
+                                                    color: style.color,
+                                                    borderRadius:
+                                                        BorderRadius
+                                                            .circular(12),
+                                                  ),
+                                                  child: Icon(style.icon,
+                                                      color: const Color(
+                                                          0xFF3949AB),
+                                                      size: 20),
+                                                ),
+                                                title: Text(
+                                                  e.description ??
+                                                      _categoryName(
+                                                          e.categoryId),
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 14),
+                                                ),
+                                                subtitle: Text(
+                                                  _categoryName(
+                                                      e.categoryId),
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey),
+                                                ),
+                                                trailing: Text(
+                                                  '€${e.amount.toStringAsFixed(2)}',
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 15,
+                                                      color: Color(
+                                                          0xFF3949AB)),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                        title: Text(
-                                          e.description ?? _categoryName(e.categoryId),
-                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                                        ),
-                                        subtitle: Text(
-                                          _categoryName(e.categoryId),
-                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                        ),
-                                        trailing: Text(
-                                          '€${e.amount.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF3949AB)),
-                                        ),
-                                      ),
-                                    ),
+                                      );
+                                    },
                                   ),
-                                );
-                              }),
-                            ],
-                          );
-                        },
+                                ],
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
+                  ],
+                ),
       floatingActionButton: ScaleTransition(
         scale: _fabAnimation,
-        child: FloatingActionButton(
-          backgroundColor: const Color(0xFF3949AB),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          onPressed: () async {
-            await Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
-            _loadData();
-          },
-          child: const Icon(Icons.add, color: Colors.white),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3949AB).withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              )
+            ],
+          ),
+          child: FloatingActionButton(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            onPressed: () async {
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AddExpenseScreen()));
+              _loadData();
+            },
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Slide-in animation widget ──
+class _AnimatedExpenseCard extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+
+  const _AnimatedExpenseCard({
+    super.key,
+    required this.child,
+    required this.delay,
+  });
+
+  @override
+  State<_AnimatedExpenseCard> createState() =>
+      _AnimatedExpenseCardState();
+}
+
+class _AnimatedExpenseCardState extends State<_AnimatedExpenseCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<Offset> _slide;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 350));
+    _slide = Tween<Offset>(
+      begin: const Offset(0.3, 0),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _fade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
+// ── Shimmer card widget ──
+class _ShimmerExpenseCard extends StatefulWidget {
+  final Duration delay;
+  const _ShimmerExpenseCard({required this.delay});
+
+  @override
+  State<_ShimmerExpenseCard> createState() =>
+      _ShimmerExpenseCardState();
+}
+
+class _ShimmerExpenseCardState extends State<_ShimmerExpenseCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 1200))
+      ..repeat();
+    _anim = Tween<double>(begin: -1, end: 2).animate(
+        CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: AnimatedBuilder(
+        animation: _anim,
+        builder: (context, child) {
+          return Container(
+            height: 72,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: LinearGradient(
+                begin: Alignment(_anim.value - 1, 0),
+                end: Alignment(_anim.value, 0),
+                colors: [
+                  Colors.grey.shade200,
+                  Colors.grey.shade100,
+                  Colors.grey.shade200,
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

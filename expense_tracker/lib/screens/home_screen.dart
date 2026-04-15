@@ -53,9 +53,13 @@ class _HomeScreenState extends State<HomeScreen>
     final categories = await DatabaseHelper.instance.getAllCategories();
 
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1).toIso8601String();
-    final todayStart = DateTime(now.year, now.month, now.day).toIso8601String();
-    final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
+    final monthStart =
+        DateTime(now.year, now.month, 1).toIso8601String();
+    final todayStart =
+        DateTime(now.year, now.month, now.day).toIso8601String();
+    final todayEnd = DateTime(
+            now.year, now.month, now.day, 23, 59, 59)
+        .toIso8601String();
 
     final monthData = await DatabaseHelper.instance
         .getExpensesByCategory(monthStart, now.toIso8601String());
@@ -67,17 +71,22 @@ class _HomeScreenState extends State<HomeScreen>
       final day = now.subtract(Duration(days: i));
       final dayExpenses = expenses.where((e) {
         final d = DateTime.parse(e.date);
-        return d.year == day.year && d.month == day.month && d.day == day.day;
+        return d.year == day.year &&
+            d.month == day.month &&
+            d.day == day.day;
       });
-      final total = dayExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+      final total =
+          dayExpenses.fold<double>(0, (sum, e) => sum + e.amount);
       weekData.add(_DayBar(day: day, total: total, isToday: i == 0));
     }
 
     setState(() {
       _categories = categories;
       _recent = expenses.take(5).toList();
-      _monthTotal = monthData.fold(0, (sum, r) => sum + (r['total'] as double));
-      _todayTotal = todayData.fold(0, (sum, r) => sum + (r['total'] as double));
+      _monthTotal =
+          monthData.fold(0, (sum, r) => sum + (r['total'] as double));
+      _todayTotal =
+          todayData.fold(0, (sum, r) => sum + (r['total'] as double));
       _weekData = weekData;
       _loading = false;
     });
@@ -100,10 +109,12 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildShimmer() {
     return Column(
-      children: List.generate(3, (i) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-        child: _ShimmerCard(),
-      )),
+      children: List.generate(
+          3,
+          (i) => Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: _ShimmerCard(),
+              )),
     );
   }
 
@@ -111,7 +122,9 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final maxVal = _weekData.isEmpty
         ? 1.0
-        : _weekData.map((d) => d.total).reduce((a, b) => a > b ? a : b);
+        : _weekData
+            .map((d) => d.total)
+            .reduce((a, b) => a > b ? a : b);
 
     return Scaffold(
       body: RefreshIndicator(
@@ -132,7 +145,8 @@ class _HomeScreenState extends State<HomeScreen>
               iconTheme: const IconThemeData(color: Colors.white),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.bar_chart, color: Colors.white),
+                  icon: const Icon(Icons.bar_chart,
+                      color: Colors.white),
                   onPressed: widget.onAnalysis,
                 ),
               ],
@@ -145,20 +159,23 @@ class _HomeScreenState extends State<HomeScreen>
                       colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
                     ),
                   ),
-                  padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                  padding:
+                      const EdgeInsets.fromLTRB(16, 100, 16, 16),
                   child: Row(
                     children: [
                       Expanded(
                         child: _SummaryCard(
                           label: 'ΤΡΕΧΟΝ ΜΗΝΑΣ',
-                          value: '€${_monthTotal.toStringAsFixed(2)}',
+                          value:
+                              '€${_monthTotal.toStringAsFixed(2)}',
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _SummaryCard(
                           label: 'ΣΗΜΕΡΑ',
-                          value: '€${_todayTotal.toStringAsFixed(2)}',
+                          value:
+                              '€${_todayTotal.toStringAsFixed(2)}',
                         ),
                       ),
                     ],
@@ -187,12 +204,38 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('ΤΕΛΕΥΤΑΙΕΣ 7 ΗΜΕΡΕΣ',
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                              letterSpacing: 0.5)),
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('ΤΕΛΕΥΤΑΙΕΣ 7 ΗΜΕΡΕΣ',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                  letterSpacing: 0.5)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF3949AB),
+                                  Color(0xFF1E88E5)
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Εβδομάδα: €${_weekData.fold<double>(0, (sum, b) => sum + b.total).toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 16),
                       AnimatedBuilder(
                         animation: _barAnimation,
@@ -200,16 +243,20 @@ class _HomeScreenState extends State<HomeScreen>
                           return SizedBox(
                             height: 120,
                             child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.end,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceAround,
                               children: _weekData.map((bar) {
                                 final heightRatio = maxVal > 0
                                     ? bar.total / maxVal
                                     : 0.0;
-                                final animatedHeight =
-                                    80.0 * heightRatio * _barAnimation.value;
+                                final animatedHeight = 80.0 *
+                                    heightRatio *
+                                    _barAnimation.value;
                                 return Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.end,
                                   children: [
                                     if (bar.total > 0)
                                       Opacity(
@@ -218,33 +265,45 @@ class _HomeScreenState extends State<HomeScreen>
                                           '€${bar.total.toStringAsFixed(0)}',
                                           style: TextStyle(
                                               fontSize: 9,
-                                              fontWeight: FontWeight.bold,
+                                              fontWeight:
+                                                  FontWeight.bold,
                                               color: bar.isToday
-                                                  ? const Color(0xFF3949AB)
+                                                  ? const Color(
+                                                      0xFF3949AB)
                                                   : Colors.grey),
                                         ),
                                       ),
-                                    if (bar.total > 0) const SizedBox(height: 4),
+                                    if (bar.total > 0)
+                                      const SizedBox(height: 4),
                                     Container(
                                       width: 28,
                                       height: bar.total > 0
-                                          ? animatedHeight.clamp(0.0, 80.0)
+                                          ? animatedHeight.clamp(
+                                              0.0, 80.0)
                                           : 4,
                                       decoration: BoxDecoration(
                                         gradient: bar.total > 0
                                             ? LinearGradient(
-                                                begin: Alignment.bottomCenter,
-                                                end: Alignment.topCenter,
+                                                begin: Alignment
+                                                    .bottomCenter,
+                                                end: Alignment
+                                                    .topCenter,
                                                 colors: bar.isToday
                                                     ? [
-                                                        const Color(0xFF3949AB),
-                                                        const Color(0xFF1E88E5)
+                                                        const Color(
+                                                            0xFF3949AB),
+                                                        const Color(
+                                                            0xFF1E88E5)
                                                       ]
                                                     : [
-                                                        const Color(0xFF3949AB)
-                                                            .withOpacity(0.2),
-                                                        const Color(0xFF3949AB)
-                                                            .withOpacity(0.4)
+                                                        const Color(
+                                                                0xFF3949AB)
+                                                            .withOpacity(
+                                                                0.2),
+                                                        const Color(
+                                                                0xFF3949AB)
+                                                            .withOpacity(
+                                                                0.4)
                                                       ],
                                               )
                                             : null,
@@ -285,18 +344,23 @@ class _HomeScreenState extends State<HomeScreen>
             // ── Header ──
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                padding:
+                    const EdgeInsets.fromLTRB(16, 20, 16, 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(children: [
                       Container(
-                        width: 3, height: 16,
+                        width: 3,
+                        height: 16,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                            colors: [
+                              Color(0xFF3949AB),
+                              Color(0xFF1E88E5)
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(2),
                         ),
@@ -312,7 +376,8 @@ class _HomeScreenState extends State<HomeScreen>
                     TextButton(
                       onPressed: widget.onViewAll,
                       child: const Text('Όλα',
-                          style: TextStyle(color: Color(0xFF3949AB))),
+                          style:
+                              TextStyle(color: Color(0xFF3949AB))),
                     ),
                   ],
                 ),
@@ -326,7 +391,8 @@ class _HomeScreenState extends State<HomeScreen>
               SliverToBoxAdapter(
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 32, 16, 32),
+                    padding:
+                        const EdgeInsets.fromLTRB(16, 32, 16, 32),
                     child: Column(
                       children: [
                         Icon(Icons.receipt_long_outlined,
@@ -341,7 +407,8 @@ class _HomeScreenState extends State<HomeScreen>
                         const Text(
                             'Καταγράψτε τα καθημερινά σας έξοδα\nγια να παρακολουθείτε τις δαπάνες σας.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: Colors.grey)),
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey)),
                         const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -376,53 +443,68 @@ class _HomeScreenState extends State<HomeScreen>
                     final date = DateTime.parse(e.date);
                     final style =
                         getCategoryStyle(_categoryName(e.categoryId));
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border(
-                            left: BorderSide(
-                                color: style.color.withOpacity(0.8),
-                                width: 4),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            )
-                          ],
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 4),
-                          leading: Container(
-                            width: 42, height: 42,
-                            decoration: BoxDecoration(
-                              color: style.color,
-                              borderRadius: BorderRadius.circular(12),
+                    final delay = Duration(
+                        milliseconds: 60 * i.clamp(0, 10));
+
+                    return _AnimatedHomeCard(
+                      key: Key(e.id.toString()),
+                      delay: delay,
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border(
+                              left: BorderSide(
+                                  color: style.color.withOpacity(0.8),
+                                  width: 4),
                             ),
-                            child: Icon(style.icon,
-                                color: const Color(0xFF3949AB), size: 20),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              )
+                            ],
                           ),
-                          title: Text(
-                            e.description ?? _categoryName(e.categoryId),
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 14),
-                          ),
-                          subtitle: Text(
-                            '${_categoryName(e.categoryId)}  ·  ${date.day}/${date.month}/${date.year}',
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
-                          ),
-                          trailing: Text(
-                            '€${e.amount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Color(0xFF3949AB),
+                          child: ListTile(
+                            contentPadding:
+                                const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 4),
+                            leading: Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: style.color,
+                                borderRadius:
+                                    BorderRadius.circular(12),
+                              ),
+                              child: Icon(style.icon,
+                                  color: const Color(0xFF3949AB),
+                                  size: 20),
+                            ),
+                            title: Text(
+                              e.description ??
+                                  _categoryName(e.categoryId),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14),
+                            ),
+                            subtitle: Text(
+                              '${_categoryName(e.categoryId)}  ·  ${date.day}/${date.month}/${date.year}',
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
+                            ),
+                            trailing: Text(
+                              '€${e.amount.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: Color(0xFF3949AB),
+                              ),
                             ),
                           ),
                         ),
@@ -437,7 +519,6 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
       ),
-      // Gradient FAB
       floatingActionButton: Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -456,11 +537,12 @@ class _HomeScreenState extends State<HomeScreen>
           backgroundColor: Colors.transparent,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+              borderRadius: BorderRadius.circular(16)),
           onPressed: () async {
-            await Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AddExpenseScreen()));
             _loadData();
           },
           child: const Icon(Icons.add, color: Colors.white),
@@ -489,8 +571,8 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: Colors.white.withOpacity(0.2), width: 1),
+        border:
+            Border.all(color: Colors.white.withOpacity(0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,7 +580,9 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(label,
               style: const TextStyle(
-                  fontSize: 8, color: Colors.white70, letterSpacing: 0.5)),
+                  fontSize: 8,
+                  color: Colors.white70,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 2),
           Text(value,
               style: const TextStyle(
@@ -511,7 +595,61 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-// Shimmer card widget
+// ── Animated home card ──
+class _AnimatedHomeCard extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+
+  const _AnimatedHomeCard({
+    super.key,
+    required this.child,
+    required this.delay,
+  });
+
+  @override
+  State<_AnimatedHomeCard> createState() => _AnimatedHomeCardState();
+}
+
+class _AnimatedHomeCardState extends State<_AnimatedHomeCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<Offset> _slide;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 350));
+    _slide = Tween<Offset>(
+      begin: const Offset(0.3, 0),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _fade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
+// ── Shimmer card ──
 class _ShimmerCard extends StatefulWidget {
   @override
   State<_ShimmerCard> createState() => _ShimmerCardState();

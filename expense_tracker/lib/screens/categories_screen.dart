@@ -41,19 +41,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   void _showCategoryDialog({Category? existing}) {
-    final nameController = TextEditingController(text: existing?.name ?? '');
+    final nameController =
+        TextEditingController(text: existing?.name ?? '');
     final descController =
         TextEditingController(text: existing?.description ?? '');
-
     final messenger = ScaffoldMessenger.of(context);
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          existing == null ? 'Νέα κατηγορία' : 'Επεξεργασία κατηγορίας',
-        ),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: Text(existing == null
+            ? 'Νέα κατηγορία'
+            : 'Επεξεργασία κατηγορίας'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -81,23 +82,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3949AB),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
+                backgroundColor: const Color(0xFF3949AB),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8))),
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isEmpty) {
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Η ονομασία είναι υποχρεωτική'),
-                  ),
-                );
+                messenger.showSnackBar(const SnackBar(
+                    content: Text('Η ονομασία είναι υποχρεωτική')));
                 return;
               }
-
               final category = Category(
                 id: existing?.id,
                 name: name,
@@ -105,13 +100,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     ? null
                     : descController.text.trim(),
               );
-
               if (existing == null) {
                 await DatabaseHelper.instance.insertCategory(category);
               } else {
                 await DatabaseHelper.instance.updateCategory(category);
               }
-
               Navigator.pop(ctx);
               _loadCategories();
             },
@@ -123,32 +116,26 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Future<void> _deleteCategory(Category category) async {
-    final expenseCount =
-        await DatabaseHelper.instance.getExpenseCountForCategory(category.id!);
+    final expenseCount = await DatabaseHelper.instance
+        .getExpenseCountForCategory(category.id!);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Διαγραφή κατηγορίας',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-          ],
-        ),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        title: const Row(children: [
+          Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+          SizedBox(width: 8),
+          Expanded(
+              child: Text('Διαγραφή κατηγορίας',
+                  style: TextStyle(fontSize: 16))),
+        ]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Είστε σίγουροι για τη διαγραφή της κατηγορίας "${category.name}";',
-            ),
+            Text('Είστε σίγουροι για τη διαγραφή της κατηγορίας "${category.name}";'),
             if (expenseCount > 0) ...[
               const SizedBox(height: 12),
               Container(
@@ -158,43 +145,35 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.orange.shade300),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline,
-                        color: Colors.orange, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Υπάρχουν $expenseCount έξοδα σε αυτή την κατηγορία. '
-                        'Θα μετακινηθούν αυτόματα στην κατηγορία "Άγνωστη".',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange,
-                        ),
-                      ),
+                child: Row(children: [
+                  const Icon(Icons.info_outline,
+                      color: Colors.orange, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Υπάρχουν $expenseCount έξοδα σε αυτή την κατηγορία. '
+                      'Θα μετακινηθούν αυτόματα στην κατηγορία "Άγνωστη".',
+                      style: const TextStyle(
+                          fontSize: 12, color: Colors.orange),
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               ),
             ],
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Άκυρο'),
-          ),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Άκυρο')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Διαγραφή'),
-          ),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8))),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Διαγραφή')),
         ],
       ),
     );
@@ -224,14 +203,33 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             ),
           ),
         ),
-        title: Text(
-          _categories.isEmpty
-              ? 'Κατηγορίες'
-              : 'Κατηγορίες (${_categories.length})',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Κατηγορίες',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+            if (_categories.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: Colors.white.withOpacity(0.4), width: 1),
+                ),
+                child: Text(
+                  '${_categories.length}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ]
+          ],
         ),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
@@ -239,39 +237,47 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       ),
       floatingActionButton: _categories.isEmpty
           ? null
-          : FloatingActionButton(
-              backgroundColor: const Color(0xFF3949AB),
-              shape: RoundedRectangleBorder(
+          : Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                ),
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF3949AB).withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
               ),
-              onPressed: () => _showCategoryDialog(),
-              child: const Icon(Icons.add, color: Colors.white),
+              child: FloatingActionButton(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                onPressed: () => _showCategoryDialog(),
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
             ),
       body: _categories.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.label_off_outlined,
-                    size: 72,
-                    color: Colors.grey.shade300,
-                  ),
+                  Icon(Icons.label_off_outlined,
+                      size: 72, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Καμία κατηγορία ακόμα.',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                  ),
+                  const Text('Καμία κατηγορία ακόμα.',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey)),
                   const SizedBox(height: 8),
                   const Text(
-                    'Δημιουργήστε κατηγορίες για να οργανώσετε\nτα έξοδά σας.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
+                      'Δημιουργήστε κατηγορίες για να οργανώσετε\nτα έξοδά σας.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: Colors.grey)),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.add),
@@ -280,12 +286,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       backgroundColor: const Color(0xFF3949AB),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                          horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () => _showCategoryDialog(),
                   ),
@@ -298,40 +301,31 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   Container(
                     margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEEF0FF),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF3949AB).withOpacity(0.2),
-                      ),
+                          color:
+                              const Color(0xFF3949AB).withOpacity(0.2)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.swipe,
-                          color: Color(0xFF3949AB),
-                          size: 18,
-                        ),
+                        const Icon(Icons.swipe,
+                            color: Color(0xFF3949AB), size: 18),
                         const SizedBox(width: 10),
                         const Expanded(
                           child: Text(
                             'Σύρε δεξιά για επεξεργασία · Σύρε αριστερά για διαγραφή',
                             style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF3949AB),
-                            ),
+                                fontSize: 12, color: Color(0xFF3949AB)),
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() => _showHint = false),
-                          child: const Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Color(0xFF3949AB),
-                          ),
+                          onTap: () =>
+                              setState(() => _showHint = false),
+                          child: const Icon(Icons.close,
+                              size: 16, color: Color(0xFF3949AB)),
                         ),
                       ],
                     ),
@@ -340,137 +334,128 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(12),
                     itemCount: _categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: 8),
                     itemBuilder: (ctx, i) {
                       final cat = _categories[i];
                       final style = getCategoryStyle(cat.name);
                       final count = _expenseCount[cat.id] ?? 0;
                       final total = _expenseTotal[cat.id] ?? 0.0;
+                      final delay =
+                          Duration(milliseconds: 60 * i.clamp(0, 15));
 
-                      return Dismissible(
+                      return _AnimatedCategoryCard(
                         key: Key(cat.id.toString()),
-                        secondaryBackground: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.delete,
-                                  color: Colors.white, size: 26),
-                              SizedBox(height: 4),
-                              Text(
-                                'Διαγραφή',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        background: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3949AB),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.only(left: 20),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.edit,
-                                  color: Colors.white, size: 26),
-                              SizedBox(height: 4),
-                              Text(
-                                'Επεξεργασία',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        confirmDismiss: (direction) async {
-                          if (direction == DismissDirection.startToEnd) {
-                            _showCategoryDialog(existing: cat);
-                            return false;
-                          } else {
-                            await _deleteCategory(cat);
-                            return false;
-                          }
-                        },
-                        onDismissed: (_) {},
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: style.color.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: style.color,
-                              width: 1.5,
+                        delay: delay,
+                        child: Dismissible(
+                          key: ValueKey('${cat.id}_dismiss'),
+                          secondaryBackground: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
-                            ),
-                            leading: Container(
-                              width: 46,
-                              height: 46,
-                              decoration: BoxDecoration(
-                                color: style.color,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                style.icon,
-                                color: const Color(0xFF3949AB),
-                                size: 22,
-                              ),
-                            ),
-                            title: Text(
-                              cat.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            subtitle: cat.description != null
-                                ? Text(
-                                    cat.description!,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  )
-                                : null,
-                            trailing: Column(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(
-                                  '€${total.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: Color(0xFF3949AB),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '$count ${count == 1 ? 'έξοδο' : 'έξοδα'}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                  ),
-                                ),
+                                Icon(Icons.delete,
+                                    color: Colors.white, size: 26),
+                                SizedBox(height: 4),
+                                Text('Διαγραφή',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
                               ],
+                            ),
+                          ),
+                          background: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3949AB),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.edit,
+                                    color: Colors.white, size: 26),
+                                SizedBox(height: 4),
+                                Text('Επεξεργασία',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          confirmDismiss: (direction) async {
+                            if (direction ==
+                                DismissDirection.startToEnd) {
+                              _showCategoryDialog(existing: cat);
+                              return false;
+                            } else {
+                              await _deleteCategory(cat);
+                              return false;
+                            }
+                          },
+                          onDismissed: (_) {},
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: style.color.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                  color: style.color, width: 1.5),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 6),
+                              leading: Container(
+                                width: 46,
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  color: style.color,
+                                  borderRadius:
+                                      BorderRadius.circular(12),
+                                ),
+                                child: Icon(style.icon,
+                                    color: const Color(0xFF3949AB),
+                                    size: 22),
+                              ),
+                              title: Text(cat.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15)),
+                              subtitle: cat.description != null
+                                  ? Text(cat.description!,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey))
+                                  : null,
+                              trailing: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '€${total.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Color(0xFF3949AB)),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '$count ${count == 1 ? 'έξοδο' : 'έξοδα'}',
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -480,6 +465,60 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+class _AnimatedCategoryCard extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+
+  const _AnimatedCategoryCard({
+    super.key,
+    required this.child,
+    required this.delay,
+  });
+
+  @override
+  State<_AnimatedCategoryCard> createState() =>
+      _AnimatedCategoryCardState();
+}
+
+class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<Offset> _slide;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 350));
+    _slide = Tween<Offset>(
+      begin: const Offset(0.3, 0),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _fade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
     );
   }
 }

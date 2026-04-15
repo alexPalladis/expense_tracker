@@ -7,7 +7,6 @@ import 'categories_screen.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final Expense? existing;
-
   const AddExpenseScreen({super.key, this.existing});
 
   @override
@@ -62,8 +61,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.deniedForever) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Η άδεια τοποθεσίας απορρίφθηκε.')));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Η άδεια τοποθεσίας απορρίφθηκε.')));
+        }
         setState(() => _loadingLocation = false);
         return;
       }
@@ -76,8 +77,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       });
     } catch (e) {
       setState(() => _loadingLocation = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Δεν ανακτήθηκε τοποθεσία: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Δεν ανακτήθηκε τοποθεσία: $e')));
+      }
     }
   }
 
@@ -93,8 +96,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   Future<void> _save() async {
     if (_amountController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Απαιτείται ποσό')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Απαιτείται ποσό')));
       return;
     }
     final amount = double.tryParse(_amountController.text.trim());
@@ -104,8 +107,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       return;
     }
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Επιλέξτε κατηγορία')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Επιλέξτε κατηγορία')));
       return;
     }
 
@@ -130,19 +133,59 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       await DatabaseHelper.instance.updateExpense(expense);
     }
 
-    Navigator.pop(context, true);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                widget.existing == null
+                    ? '✓ Το έξοδο αποθηκεύτηκε!'
+                    : '✓ Το έξοδο ενημερώθηκε!',
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 300));
+      Navigator.pop(context, true);
+    }
   }
 
+  // Section header με gradient accent bar
   Widget _sectionHeader(String title, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF3949AB)),
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+              ),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           const SizedBox(width: 8),
+          Icon(icon, size: 16, color: const Color(0xFF3949AB)),
+          const SizedBox(width: 6),
           Text(title,
               style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF3949AB),
                   letterSpacing: 0.5)),
@@ -175,14 +218,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final isEdit = widget.existing != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: CustomScrollView(
         slivers: [
-          // ── Colored header ──
+          // ── Gradient header ──
           SliverAppBar(
             expandedHeight: 160,
             pinned: true,
-            backgroundColor: const Color(0xFF3949AB),
             foregroundColor: Colors.white,
             title: Text(
               isEdit ? 'Επεξεργασία Εξόδου' : 'Νέο Έξοδο',
@@ -192,7 +234,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             centerTitle: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                color: const Color(0xFF3949AB),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                  ),
+                ),
                 padding: const EdgeInsets.fromLTRB(16, 100, 16, 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -203,10 +251,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.25), width: 1),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.euro, color: Colors.white, size: 20),
+                          const Icon(Icons.euro,
+                              color: Colors.white, size: 20),
                           const SizedBox(width: 6),
                           Text(
                             _amountController.text.isEmpty
@@ -224,6 +275,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ),
               ),
             ),
+            backgroundColor: const Color(0xFF3949AB),
           ),
 
           SliverToBoxAdapter(
@@ -233,7 +285,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  // ── Section: Βασικά στοιχεία ──
+                  // ── Βασικά Στοιχεία ──
                   _sectionHeader('ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ', Icons.edit_outlined),
                   _card(
                     child: Column(
@@ -277,13 +329,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // ── Section: Κατηγορία ──
+                  // ── Κατηγορία ──
                   _sectionHeader('ΚΑΤΗΓΟΡΙΑ', Icons.label_outline),
                   _card(
                     child: _categories.isEmpty
                         ? ElevatedButton.icon(
                             icon: const Icon(Icons.add),
-                            label: const Text('Δημιουργήστε μία κατηγορία πρώτα'),
+                            label: const Text(
+                                'Δημιουργήστε μία κατηγορία πρώτα'),
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF3949AB),
                                 foregroundColor: Colors.white),
@@ -320,8 +373,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // ── Section: Ημερομηνία ──
-                  _sectionHeader('ΗΜΕΡΟΜΗΝΙΑ', Icons.calendar_today_outlined),
+                  // ── Ημερομηνία ──
+                  _sectionHeader(
+                      'ΗΜΕΡΟΜΗΝΙΑ', Icons.calendar_today_outlined),
                   _card(
                     child: Row(
                       children: [
@@ -329,11 +383,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEEF0FF),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.calendar_today,
-                              color: Color(0xFF3949AB), size: 20),
+                              color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -356,14 +412,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         TextButton(
                           onPressed: _pickDate,
                           child: const Text('Αλλαγή',
-                              style: TextStyle(color: Color(0xFF3949AB))),
+                              style:
+                                  TextStyle(color: Color(0xFF3949AB))),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  // ── Section: Τοποθεσία ──
+                  // ── Τοποθεσία ──
                   _sectionHeader('ΤΟΠΟΘΕΣΙΑ', Icons.place_outlined),
                   _card(
                     child: Column(
@@ -371,33 +428,50 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       children: [
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton.icon(
-                            icon: _loadingLocation
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white))
-                                : Icon(_latitude != null
-                                    ? Icons.location_on
-                                    : Icons.my_location),
-                            label: Text(_loadingLocation
-                                ? 'Ανάκτηση τοποθεσίας...'
-                                : _latitude != null
-                                    ? 'Τοποθεσία ανακτήθηκε ✓'
-                                    : 'Ανάκτηση τοποθεσίας'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _latitude != null
-                                  ? Colors.green
-                                  : const Color(0xFF3949AB),
-                              foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: _latitude != null
+                                  ? null
+                                  : const LinearGradient(
+                                      colors: [
+                                        Color(0xFF3949AB),
+                                        Color(0xFF1E88E5)
+                                      ],
+                                    ),
+                              color: _latitude != null
+                                  ? Colors.green.shade600
+                                  : null,
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            onPressed: _loadingLocation ? null : _getLocation,
+                            child: ElevatedButton.icon(
+                              icon: _loadingLocation
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white))
+                                  : Icon(_latitude != null
+                                      ? Icons.location_on
+                                      : Icons.my_location),
+                              label: Text(_loadingLocation
+                                  ? 'Ανάκτηση τοποθεσίας...'
+                                  : _latitude != null
+                                      ? 'Τοποθεσία ανακτήθηκε ✓'
+                                      : 'Ανάκτηση τοποθεσίας'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(10)),
+                              ),
+                              onPressed:
+                                  _loadingLocation ? null : _getLocation,
+                            ),
                           ),
                         ),
                         if (_latitude != null) ...[
@@ -428,9 +502,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           TextField(
                             controller: _locationNameController,
                             decoration: InputDecoration(
-                              labelText: 'Ονομασία τοποθεσίας (προαιρετική)',
+                              labelText:
+                                  'Ονομασία τοποθεσίας (προαιρετική)',
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10)),
+                                  borderRadius:
+                                      BorderRadius.circular(10)),
                               prefixIcon: const Icon(Icons.place,
                                   color: Color(0xFF3949AB)),
                               focusedBorder: OutlineInputBorder(
@@ -446,19 +522,35 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   ),
                   const SizedBox(height: 28),
 
-                  // ── Save button ──
-                  SizedBox(
+                  // ── Gradient Save button ──
+                  Container(
                     width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF3949AB).withOpacity(0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
                     child: ElevatedButton.icon(
-                      icon: Icon(isEdit ? Icons.check : Icons.save),
+                      icon: Icon(isEdit ? Icons.check : Icons.save,
+                          color: Colors.white),
                       label: Text(
                         isEdit ? 'Ενημέρωση' : 'Αποθήκευση',
                         style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3949AB),
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
