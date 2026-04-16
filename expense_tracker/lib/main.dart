@@ -37,11 +37,13 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   late final List<Widget> _screens = [
     HomeScreen(
       onViewAll: () => setState(() => _currentIndex = 1),
       onAnalysis: () => setState(() => _currentIndex = 3),
+      onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
     ),
     const ExpensesScreen(),
     const CategoriesScreen(),
@@ -56,15 +58,17 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_currentIndex],
-      drawer: _buildDrawer(),
-      bottomNavigationBar: _buildBottomNav(),
-    );
+   return Scaffold(
+  key: _scaffoldKey, 
+  body: _screens[_currentIndex],
+  drawer: _buildDrawer(),
+  bottomNavigationBar: _buildBottomNav(),
+);
   }
 
   Widget _buildDrawer() {
     return Drawer(
+      width: 220,
       child: Column(
         children: [
           // Gradient header
@@ -125,7 +129,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           _DrawerItem(
             icon: Icons.list_alt_outlined,
-            label: 'Όλα τα Έξοδα',
+            label: 'Έξοδα',
             active: _currentIndex == 1,
             onTap: () {
               setState(() => _currentIndex = 1);
@@ -160,8 +164,8 @@ class _MainScreenState extends State<MainScreen> {
               showAboutDialog(
                 context: context,
                 applicationName: 'Expense Tracker',
-                applicationVersion: '1.0.0',
-                applicationLegalese: 'ΠΜΣ Μηχανική Λογισμικού',
+                applicationVersion: 'version 1.0.0',
+                applicationLegalese: 'Αλέξανδρος Παλλάδης \nΚινητός και Διάχυτος Υπολογισμός',
               );
             },
           ),

@@ -16,7 +16,8 @@ import 'add_expense_screen.dart';
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onViewAll;
   final VoidCallback? onAnalysis;
-  const HomeScreen({super.key, this.onViewAll, this.onAnalysis});
+  final VoidCallback? onOpenDrawer;
+  const HomeScreen({super.key, this.onViewAll, this.onAnalysis, this.onOpenDrawer});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -118,6 +119,10 @@ class _HomeScreenState extends State<HomeScreen>
               expandedHeight: 150,
               pinned: true,
               backgroundColor: const Color(0xFF3949AB),
+              leading: IconButton(
+  icon: const Icon(Icons.menu, color: Colors.white),
+  onPressed: widget.onOpenDrawer, 
+),
               title: const Text(
                 'Expense Tracker',
                 style: TextStyle(
