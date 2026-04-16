@@ -31,16 +31,27 @@ lib/
 │   ├── category.dart
 │   └── expense.dart
 ├── db/
-│   └── database_helper.dart
+│   └── database_config.dart
 ├── screens/
+│   ├── splash_screen.dart
 │   ├── home_screen.dart
 │   ├── add_expense_screen.dart
 │   ├── expenses_screen.dart
 │   ├── categories_screen.dart
 │   └── analysis_screen.dart
+├── widgets/
+│   ├── shimmer_card.dart         
+│   ├── animated_list_card.dart   
+│   ├── gradient_fab.dart         
+│   ├── gradient_app_bar.dart     
+│   ├── section_header.dart       
+│   ├── expense_card.dart         
+│   ├── summary_card.dart         
+│   ├── bar_chart_widget.dart     
+│   └── empty_state.dart         
 ├── utils/
-│   └── category_style.dart
-└── main.dart
+│   └── category_style.dart       
+└── main.dart                     
 ```
 
 ---
