@@ -1,5 +1,5 @@
+import 'package:expense_tracker/db/database_config.dart';
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
 import '../models/category.dart';
 import '../utils/category_style.dart';
 import '../widgets/animated_list_card.dart';
@@ -54,70 +54,215 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         TextEditingController(text: existing?.description ?? '');
     final messenger = ScaffoldMessenger.of(context);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Text(existing == null
-            ? 'Νέα κατηγορία'
-            : 'Επεξεργασία κατηγορίας'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Ονομασία *',
-                border: OutlineInputBorder(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Περιγραφή (προαιρετική)',
-                border: OutlineInputBorder(),
+              // Gradient icon + title
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.label_outline,
+                        color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Text(
+                    existing == null
+                        ? 'Νέα κατηγορία'
+                        : 'Επεξεργασία κατηγορίας',
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A2E)),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              // Name field
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Ονομασία *',
+                  filled: true,
+                  fillColor: const Color(0xFFF0F2FF),
+                  prefixIcon: const Icon(Icons.label_outline,
+                      color: Color(0xFF3949AB), size: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                        color: Color(0xFF3949AB), width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Description field
+              TextField(
+                controller: descController,
+                decoration: InputDecoration(
+                  labelText: 'Περιγραφή (προαιρετική)',
+                  filled: true,
+                  fillColor: const Color(0xFFF0F2FF),
+                  prefixIcon: const Icon(Icons.notes,
+                      color: Color(0xFF3949AB), size: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                        color: Color(0xFF3949AB), width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        side:
+                            BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Ακύρωση',
+                          style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF3949AB),
+                            Color(0xFF1E88E5)
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3949AB)
+                                .withOpacity(0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          )
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () async {
+                          final name = nameController.text.trim();
+                          if (name.isEmpty) {
+                            messenger.showSnackBar(SnackBar(
+                              content: const Row(children: [
+                                Icon(Icons.error_outline,
+                                    color: Colors.white, size: 18),
+                                SizedBox(width: 8),
+                                Text('Η ονομασία είναι υποχρεωτική',
+                                    style: TextStyle(
+                                        color: Colors.white)),
+                              ]),
+                              backgroundColor: Colors.red.shade600,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12)),
+                              margin: const EdgeInsets.all(16),
+                            ));
+                            return;
+                          }
+                          final category = Category(
+                            id: existing?.id,
+                            name: name,
+                            description:
+                                descController.text.trim().isEmpty
+                                    ? null
+                                    : descController.text.trim(),
+                          );
+                          if (existing == null) {
+                            await DatabaseHelper.instance
+                                .insertCategory(category);
+                          } else {
+                            await DatabaseHelper.instance
+                                .updateCategory(category);
+                          }
+                          Navigator.pop(ctx);
+                          _loadCategories();
+                        },
+                        child: Text(
+                          existing == null ? 'Προσθήκη' : 'Αποθήκευση',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Ακύρωση'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3949AB),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8))),
-            onPressed: () async {
-              final name = nameController.text.trim();
-              if (name.isEmpty) {
-                messenger.showSnackBar(const SnackBar(
-                    content: Text('Η ονομασία είναι υποχρεωτική')));
-                return;
-              }
-              final category = Category(
-                id: existing?.id,
-                name: name,
-                description: descController.text.trim().isEmpty
-                    ? null
-                    : descController.text.trim(),
-              );
-              if (existing == null) {
-                await DatabaseHelper.instance.insertCategory(category);
-              } else {
-                await DatabaseHelper.instance.updateCategory(category);
-              }
-              Navigator.pop(ctx);
-              _loadCategories();
-            },
-            child: Text(existing == null ? 'Προσθήκη' : 'Αποθήκευση'),
-          ),
-        ],
       ),
     );
   }
@@ -142,7 +287,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Είστε σίγουροι για τη διαγραφή της κατηγορίας "${category.name}";'),
+            Text(
+                'Είστε σίγουροι για τη διαγραφή της κατηγορίας "${category.name}";'),
             if (expenseCount > 0) ...[
               const SizedBox(height: 12),
               Container(
@@ -262,7 +408,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   children: [
                     if (_showHint)
                       Container(
-                        margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                        margin:
+                            const EdgeInsets.fromLTRB(12, 12, 12, 0),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
@@ -316,7 +463,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               secondaryBackground: Container(
                                 decoration: BoxDecoration(
                                   color: Colors.red,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius:
+                                      BorderRadius.circular(12),
                                 ),
                                 alignment: Alignment.centerRight,
                                 padding:
@@ -332,17 +480,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 11,
-                                            fontWeight: FontWeight.bold)),
+                                            fontWeight:
+                                                FontWeight.bold)),
                                   ],
                                 ),
                               ),
                               background: Container(
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF3949AB),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius:
+                                      BorderRadius.circular(12),
                                 ),
                                 alignment: Alignment.centerLeft,
-                                padding: const EdgeInsets.only(left: 20),
+                                padding:
+                                    const EdgeInsets.only(left: 20),
                                 child: const Column(
                                   mainAxisAlignment:
                                       MainAxisAlignment.center,
@@ -354,7 +505,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 11,
-                                            fontWeight: FontWeight.bold)),
+                                            fontWeight:
+                                                FontWeight.bold)),
                                   ],
                                 ),
                               ),
@@ -372,7 +524,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: style.color.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius:
+                                      BorderRadius.circular(14),
                                   border: Border.all(
                                       color: style.color, width: 1.5),
                                 ),

@@ -1,6 +1,6 @@
+import 'package:expense_tracker/db/database_config.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import '../db/database_helper.dart';
 import '../models/category.dart';
 import '../models/expense.dart';
 import '../widgets/section_header.dart';
@@ -14,7 +14,8 @@ class AddExpenseScreen extends StatefulWidget {
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _AddExpenseScreenState extends State<AddExpenseScreen>
+    with SingleTickerProviderStateMixin {
   final _amountController = TextEditingController();
   final _descController = TextEditingController();
   final _locationNameController = TextEditingController();
@@ -26,9 +27,30 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   double? _longitude;
   bool _loadingLocation = false;
 
+  late AnimationController _headerController;
+  late Animation<Color?> _colorAnim1;
+  late Animation<Color?> _colorAnim2;
+
   @override
   void initState() {
     super.initState();
+
+    // Animated gradient header
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _colorAnim1 = ColorTween(
+      begin: const Color(0xFF3949AB),
+      end: const Color(0xFF7B1FA2),
+    ).animate(_headerController);
+
+    _colorAnim2 = ColorTween(
+      begin: const Color(0xFF1E88E5),
+      end: const Color(0xFF00897B),
+    ).animate(_headerController);
+
     _loadCategories();
     if (widget.existing != null) {
       final e = widget.existing!;
@@ -39,6 +61,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _latitude = e.latitude;
       _longitude = e.longitude;
     }
+  }
+
+  @override
+  void dispose() {
+    _headerController.dispose();
+    _amountController.dispose();
+    _descController.dispose();
+    _locationNameController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCategories() async {
@@ -91,25 +122,31 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF3949AB),
+            onPrimary: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
   Future<void> _save() async {
     if (_amountController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Απαιτείται ποσό')));
+      _showError('Απαιτείται ποσό');
       return;
     }
     final amount = double.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Εισάγετε έγκυρο ποσό')));
+      _showError('Εισάγετε έγκυρο ποσό');
       return;
     }
     if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Επιλέξτε κατηγορία')));
+      _showError('Επιλέξτε κατηγορία');
       return;
     }
 
@@ -143,8 +180,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(width: 10),
               Text(
                 widget.existing == null
-                    ? 'Το έξοδο αποθηκεύτηκε!'
-                    : 'Το έξοδο ενημερώθηκε!',
+                    ? '✓ Το έξοδο αποθηκεύτηκε!'
+                    : '✓ Το έξοδο ενημερώθηκε!',
                 style: const TextStyle(
                     color: Colors.white, fontWeight: FontWeight.w600),
               ),
@@ -163,19 +200,68 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
-  Widget _card({required Widget child}) {
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(children: [
+          const Icon(Icons.error_outline, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Text(msg, style: const TextStyle(color: Colors.white)),
+        ]),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  // Filled style input decoration
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+      filled: true,
+      fillColor: const Color(0xFFF0F2FF),
+      prefixIcon: Icon(icon, color: const Color(0xFF3949AB), size: 20),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide:
+            const BorderSide(color: Color(0xFF3949AB), width: 2),
+      ),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
+  // Section card wrapper
+  Widget _sectionCard({required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          )
+            color: const Color(0xFF3949AB).withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
         ],
       ),
       child: child,
@@ -187,12 +273,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final isEdit = widget.existing != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: const Color(0xFFF5F6FF),
       body: CustomScrollView(
         slivers: [
-          // ── Gradient header ──
+          // ── Animated Gradient Header ──
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 170,
             pinned: true,
             foregroundColor: Colors.white,
             title: Text(
@@ -201,48 +287,67 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   color: Colors.white, fontWeight: FontWeight.bold),
             ),
             centerTitle: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
-                  ),
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 100, 16, 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.25), width: 1),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.euro,
-                              color: Colors.white, size: 20),
-                          const SizedBox(width: 6),
-                          Text(
-                            _amountController.text.isEmpty
-                                ? '0.00'
-                                : _amountController.text,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold),
-                          ),
+            flexibleSpace: AnimatedBuilder(
+              animation: _headerController,
+              builder: (context, _) {
+                return FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _colorAnim1.value ?? const Color(0xFF3949AB),
+                          _colorAnim2.value ?? const Color(0xFF1E88E5),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // Amount preview with glow
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 28, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.1),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.euro,
+                                  color: Colors.white, size: 22),
+                              const SizedBox(width: 6),
+                              Text(
+                                _amountController.text.isEmpty
+                                    ? '0.00'
+                                    : _amountController.text,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
             backgroundColor: const Color(0xFF3949AB),
           ),
@@ -253,11 +358,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
                   // ── Βασικά Στοιχεία ──
                   const SectionHeader(
                       title: 'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ',
                       icon: Icons.edit_outlined),
-                  _card(
+                  _sectionCard(
                     child: Column(
                       children: [
                         TextField(
@@ -266,44 +372,25 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               const TextInputType.numberWithOptions(
                                   decimal: true),
                           onChanged: (_) => setState(() {}),
-                          decoration: InputDecoration(
-                            labelText: 'Ποσό (€) *',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            prefixIcon: const Icon(Icons.euro,
-                                color: Color(0xFF3949AB)),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFF3949AB), width: 2),
-                            ),
-                          ),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                          decoration: _inputDecoration('Ποσό (€) *', Icons.euro),
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
                         TextField(
                           controller: _descController,
-                          decoration: InputDecoration(
-                            labelText: 'Περιγραφή (προαιρετική)',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            prefixIcon: const Icon(Icons.notes,
-                                color: Color(0xFF3949AB)),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFF3949AB), width: 2),
-                            ),
-                          ),
+                          decoration: _inputDecoration(
+                              'Περιγραφή (προαιρετική)', Icons.notes),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
                   // ── Κατηγορία ──
                   const SectionHeader(
                       title: 'ΚΑΤΗΓΟΡΙΑ', icon: Icons.label_outline),
-                  _card(
+                  _sectionCard(
                     child: _categories.isEmpty
                         ? ElevatedButton.icon(
                             icon: const Icon(Icons.add),
@@ -323,18 +410,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           )
                         : DropdownButtonFormField<Category>(
                             value: _selectedCategory,
-                            decoration: InputDecoration(
-                              labelText: 'Επιλέξτε κατηγορία *',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10)),
-                              prefixIcon: const Icon(Icons.label_outline,
-                                  color: Color(0xFF3949AB)),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF3949AB), width: 2),
-                              ),
-                            ),
+                            decoration: _inputDecoration(
+                                'Επιλέξτε κατηγορία *',
+                                Icons.label_outline),
                             items: _categories
                                 .map((c) => DropdownMenuItem(
                                     value: c, child: Text(c.name)))
@@ -343,83 +421,114 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 setState(() => _selectedCategory = val),
                           ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
                   // ── Ημερομηνία ──
                   const SectionHeader(
                       title: 'ΗΜΕΡΟΜΗΝΙΑ',
                       icon: Icons.calendar_today_outlined),
-                  _card(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF3949AB),
-                                Color(0xFF1E88E5)
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.calendar_today,
-                              color: Colors.white, size: 20),
+                  _sectionCard(
+                    child: InkWell(
+                      onTap: _pickDate,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F2FF),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Ημερομηνία & Ώρα',
-                                  style: TextStyle(
-                                      fontSize: 12, color: Colors.grey)),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}  ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF3949AB),
+                                    Color(0xFF1E88E5)
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ],
-                          ),
+                              child: const Icon(Icons.calendar_today,
+                                  color: Colors.white, size: 20),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Ημερομηνία & Ώρα',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade500,
+                                          fontWeight: FontWeight.w500)),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}  ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                        color: Color(0xFF1A1A2E)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3949AB).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text('Αλλαγή',
+                                  style: TextStyle(
+                                      color: Color(0xFF3949AB),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: _pickDate,
-                          child: const Text('Αλλαγή',
-                              style:
-                                  TextStyle(color: Color(0xFF3949AB))),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
                   // ── Τοποθεσία ──
                   const SectionHeader(
                       title: 'ΤΟΠΟΘΕΣΙΑ',
                       icon: Icons.place_outlined),
-                  _card(
+                  _sectionCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Location button
                         SizedBox(
                           width: double.infinity,
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
                             decoration: BoxDecoration(
                               gradient: _latitude != null
-                                  ? null
-                                  : const LinearGradient(
-                                      colors: [
-                                        Color(0xFF3949AB),
-                                        Color(0xFF1E88E5)
-                                      ],
-                                    ),
-                              color: _latitude != null
-                                  ? Colors.green.shade600
-                                  : null,
-                              borderRadius: BorderRadius.circular(10),
+                                  ? LinearGradient(colors: [
+                                      Colors.green.shade500,
+                                      Colors.green.shade400,
+                                    ])
+                                  : const LinearGradient(colors: [
+                                      Color(0xFF3949AB),
+                                      Color(0xFF1E88E5),
+                                    ]),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (_latitude != null
+                                          ? Colors.green
+                                          : const Color(0xFF3949AB))
+                                      .withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                )
+                              ],
                             ),
                             child: ElevatedButton.icon(
                               icon: _loadingLocation
@@ -431,21 +540,23 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                           color: Colors.white))
                                   : Icon(_latitude != null
                                       ? Icons.location_on
-                                      : Icons.my_location),
-                              label: Text(_loadingLocation
-                                  ? 'Ανάκτηση τοποθεσίας...'
-                                  : _latitude != null
-                                      ? 'Τοποθεσία ανακτήθηκε ✓'
-                                      : 'Ανάκτηση τοποθεσίας'),
+                                      : Icons.my_location,
+                                      color: Colors.white),
+                              label: Text(
+                                _loadingLocation
+                                    ? 'Ανάκτηση τοποθεσίας...'
+                                    : _latitude != null
+                                        ? 'Τοποθεσία ανακτήθηκε ✓'
+                                        : 'Ανάκτηση τοποθεσίας',
+                                style: const TextStyle(color: Colors.white),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
-                                foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 12),
+                                    vertical: 14),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(10)),
+                                    borderRadius: BorderRadius.circular(12)),
                               ),
                               onPressed:
                                   _loadingLocation ? null : _getLocation,
@@ -453,46 +564,38 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           ),
                         ),
                         if (_latitude != null) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE8F5E9),
-                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: Colors.green.shade200),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.gps_fixed,
-                                    size: 14, color: Colors.green),
+                                Icon(Icons.gps_fixed,
+                                    size: 14,
+                                    color: Colors.green.shade600),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Lat: ${_latitude!.toStringAsFixed(4)},  Lng: ${_longitude!.toStringAsFixed(4)}',
-                                  style: const TextStyle(
-                                      color: Colors.green,
+                                  style: TextStyle(
+                                      color: Colors.green.shade700,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           TextField(
                             controller: _locationNameController,
-                            decoration: InputDecoration(
-                              labelText:
-                                  'Ονομασία τοποθεσίας (προαιρετική)',
-                              border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(10)),
-                              prefixIcon: const Icon(Icons.place,
-                                  color: Color(0xFF3949AB)),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFF3949AB), width: 2),
-                              ),
-                            ),
+                            decoration: _inputDecoration(
+                                'Ονομασία τοποθεσίας (προαιρετική)',
+                                Icons.place),
                           ),
                         ],
                       ],
@@ -500,20 +603,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   ),
                   const SizedBox(height: 28),
 
-                  // ── Gradient Save button ──
+                  // ── Save Button ──
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
                       ),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              const Color(0xFF3949AB).withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                          color: const Color(0xFF3949AB).withOpacity(0.45),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         )
                       ],
                     ),
@@ -525,20 +627,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                            color: Colors.white,
+                            letterSpacing: 0.5),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                       onPressed: _save,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),

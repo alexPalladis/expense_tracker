@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
+import '../db/database_config.dart';
 import '../models/expense.dart';
 import '../models/category.dart';
 import '../utils/category_style.dart';

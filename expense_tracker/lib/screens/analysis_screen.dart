@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../db/database_helper.dart';
+import '../db/database_config.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
