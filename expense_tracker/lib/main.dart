@@ -1,3 +1,4 @@
+import 'package:expense_tracker/db/database_config.dart';
 import 'package:flutter/material.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
@@ -6,7 +7,9 @@ import 'screens/expenses_screen.dart';
 import 'screens/categories_screen.dart';
 import 'screens/analysis_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DatabaseHelper.instance.database;
   runApp(const MyApp());
 }
 
