@@ -45,16 +45,16 @@ CategoryStyle getCategoryStyle(String name) {
   if (lower.contains('τεχνολ') || lower.contains('tech') || lower.contains('ηλεκτρον'))
     return CategoryStyle(color: const Color(0xFFE8EAF6), icon: Icons.devices_outlined);
 
-  // Default — χρώμα βάσει πρώτου γράμματος ώστε κάθε κατηγορία να έχει σταθερό χρώμα
+  //χρώμα βάσει πρώτου γράμματος ώστε κάθε κατηγορία να έχει σταθερό χρώμα
   final colors = [
-    CategoryStyle(color: const Color(0xFFEEF0FF), icon: Icons.label_outline),
-    CategoryStyle(color: const Color(0xFFE8F5E9), icon: Icons.label_outline),
-    CategoryStyle(color: const Color(0xFFFFF3E0), icon: Icons.label_outline),
-    CategoryStyle(color: const Color(0xFFFCE4EC), icon: Icons.label_outline),
-    CategoryStyle(color: const Color(0xFFE0F7FA), icon: Icons.label_outline),
-    CategoryStyle(color: const Color(0xFFEDE7F6), icon: Icons.label_outline),
-    CategoryStyle(color: const Color(0xFFF3E5F5), icon: Icons.label_outline),
-    CategoryStyle(color: const Color(0xFFFBE9E7), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 164, 171, 213), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 154, 201, 159), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 233, 215, 186), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 215, 155, 175), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 142, 189, 196), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 188, 167, 220), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 204, 159, 211), icon: Icons.label_outline),
+    CategoryStyle(color: const Color.fromARGB(255, 205, 150, 144), icon: Icons.label_outline),
   ];
   final index = name.isEmpty ? 0 : name.codeUnitAt(0) % colors.length;
   return colors[index];

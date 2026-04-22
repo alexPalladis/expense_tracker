@@ -3,7 +3,7 @@ class Expense {
   final double amount;
   final String? description;
   final int categoryId;
-  final String date;        // stored as ISO string e.g. "2025-06-01T14:30:00"
+  final String date;
   final double? latitude;
   final double? longitude;
   final String? locationName;

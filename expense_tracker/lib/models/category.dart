@@ -9,7 +9,6 @@ class Category {
     this.description,
   });
 
-  // Convert a Category into a Map (for saving to DB)
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -18,7 +17,6 @@ class Category {
     };
   }
 
-  // Create a Category from a Map (for reading from DB)
   factory Category.fromMap(Map<String, dynamic> map) {
     return Category(
       id: map['id'],

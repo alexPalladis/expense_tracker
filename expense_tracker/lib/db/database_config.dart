@@ -44,8 +44,6 @@ class DatabaseConfig {
     ''');
   }
 
-  // ─── CATEGORY CRUD ───────────────────────────────────────────
-
   Future<int> insertCategory(Category category) async {
     final db = await database;
     return await db.insert('categories', category.toMap());
@@ -68,7 +66,6 @@ class DatabaseConfig {
     return await db.delete('categories', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Ανάκτηση ή δημιουργία της κατηγορίας "Άγνωστη"
   Future<int> getOrCreateUnknownCategory() async {
     final db = await database;
     final existing = await db.query('categories',
@@ -101,14 +98,12 @@ class DatabaseConfig {
   }
 }
 
-  // Μετακίνηση εξόδων από μία κατηγορία σε άλλη
   Future<void> moveExpensesToCategory(int fromId, int toId) async {
     final db = await database;
     await db.update('expenses', {'category_id': toId},
         where: 'category_id = ?', whereArgs: [fromId]);
   }
 
-  // Αριθμός εξόδων ανά κατηγορία
   Future<int> getExpenseCountForCategory(int categoryId) async {
     final db = await database;
     final result = await db.rawQuery(
@@ -117,7 +112,7 @@ class DatabaseConfig {
     return result.first['count'] as int;
   }
 
-  // ─── EXPENSE CRUD ────────────────────────────────────────────
+
 
   Future<int> insertExpense(Expense expense) async {
     final db = await database;
@@ -141,7 +136,6 @@ class DatabaseConfig {
     return await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
   }
 
-  // ─── ANALYSIS QUERY ──────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> getExpensesByCategory(
       String startDate, String endDate) async {

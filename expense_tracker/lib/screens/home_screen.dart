@@ -284,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
 
-            // ── Bar chart ──
+            //  Bar chart 
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
@@ -295,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
 
-            // ── Header "ΠΡΟΣΦΑΤΑ ΕΞΟΔΑ" ──
+            // ΠΡΟΣΦΑΤΑ ΕΞΟΔΑ
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -313,7 +313,6 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
 
-            // ── Shimmer / Empty / List ──
             if (_loading)
               SliverToBoxAdapter(
                 child: Column(
@@ -375,7 +374,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// ── Detail Bottom Sheet με Hero ──
 class _DetailSheet extends StatelessWidget {
   final Expense expense;
   final CategoryStyle style;
