@@ -3,11 +3,11 @@ import 'package:path/path.dart';
 import '../models/category.dart';
 import '../models/expense.dart';
 
-class DatabaseHelper {
-  static final DatabaseHelper instance = DatabaseHelper._init();
+class DatabaseConfig {
+  static final DatabaseConfig instance = DatabaseConfig._init();
   static Database? _database;
 
-  DatabaseHelper._init();
+  DatabaseConfig._init();
 
   Future<Database> get database async {
     if (_database != null) return _database!;

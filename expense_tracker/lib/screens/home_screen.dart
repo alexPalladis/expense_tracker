@@ -57,9 +57,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
-    await DatabaseHelper.instance.fixOrphanedExpenses();
-    final expenses = await DatabaseHelper.instance.getAllExpenses();
-    final categories = await DatabaseHelper.instance.getAllCategories();
+    await DatabaseConfig.instance.fixOrphanedExpenses();
+    final expenses = await DatabaseConfig.instance.getAllExpenses();
+    final categories = await DatabaseConfig.instance.getAllCategories();
 
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1).toIso8601String();
@@ -68,9 +68,9 @@ class _HomeScreenState extends State<HomeScreen>
     final todayEnd =
         DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
 
-    final monthData = await DatabaseHelper.instance
+    final monthData = await DatabaseConfig.instance
         .getExpensesByCategory(monthStart, now.toIso8601String());
-    final todayData = await DatabaseHelper.instance
+    final todayData = await DatabaseConfig.instance
         .getExpensesByCategory(todayStart, todayEnd);
 
     final List<DayBar> weekData = [];
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen>
           Navigator.pop(ctx);
           final confirm = await _confirmDelete(context);
           if (confirm == true) {
-            await DatabaseHelper.instance.deleteExpense(expense.id!);
+            await DatabaseConfig.instance.deleteExpense(expense.id!);
             _loadData();
           }
         },

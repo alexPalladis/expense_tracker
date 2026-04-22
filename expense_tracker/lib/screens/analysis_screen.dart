@@ -61,7 +61,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final start = _startDate!.toIso8601String();
     final end = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59)
         .toIso8601String();
-    final results = await DatabaseHelper.instance.getExpensesByCategory(start, end);
+    final results = await DatabaseConfig.instance.getExpensesByCategory(start, end);
     setState(() {
       _results = results;
       _searched = true;

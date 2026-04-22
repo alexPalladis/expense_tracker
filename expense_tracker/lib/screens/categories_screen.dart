@@ -29,8 +29,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   Future<void> _loadCategories() async {
     setState(() => _loading = true);
-    final cats = await DatabaseHelper.instance.getAllCategories();
-    final expenses = await DatabaseHelper.instance.getAllExpenses();
+    final cats = await DatabaseConfig.instance.getAllCategories();
+    final expenses = await DatabaseConfig.instance.getAllExpenses();
 
     final Map<int, int> count = {};
     final Map<int, double> total = {};
@@ -240,10 +240,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                     : descController.text.trim(),
                           );
                           if (existing == null) {
-                            await DatabaseHelper.instance
+                            await DatabaseConfig.instance
                                 .insertCategory(category);
                           } else {
-                            await DatabaseHelper.instance
+                            await DatabaseConfig.instance
                                 .updateCategory(category);
                           }
                           Navigator.pop(ctx);
@@ -268,7 +268,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
   Future<void> _deleteCategory(Category category) async {
-    final expenseCount = await DatabaseHelper.instance
+    final expenseCount = await DatabaseConfig.instance
         .getExpenseCountForCategory(category.id!);
 
     final confirm = await showDialog<bool>(
@@ -334,11 +334,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     if (confirm == true) {
       if (expenseCount > 0) {
         final unknownId =
-            await DatabaseHelper.instance.getOrCreateUnknownCategory();
-        await DatabaseHelper.instance
+            await DatabaseConfig.instance.getOrCreateUnknownCategory();
+        await DatabaseConfig.instance
             .moveExpensesToCategory(category.id!, unknownId);
       }
-      await DatabaseHelper.instance.deleteCategory(category.id!);
+      await DatabaseConfig.instance.deleteCategory(category.id!);
       _loadCategories();
     }
   }

@@ -51,8 +51,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
-    final expenses = await DatabaseHelper.instance.getAllExpenses();
-    final categories = await DatabaseHelper.instance.getAllCategories();
+    final expenses = await DatabaseConfig.instance.getAllExpenses();
+    final categories = await DatabaseConfig.instance.getAllCategories();
     setState(() {
       _expenses = expenses;
       _categories = categories;
@@ -353,7 +353,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                         Navigator.pop(ctx);
                         final confirm = await _confirmDelete(context);
                         if (confirm == true) {
-                          await DatabaseHelper.instance
+                          await DatabaseConfig.instance
                               .deleteExpense(expense.id!);
                           _loadData();
                         }
@@ -608,7 +608,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                                         confirmDismiss: (direction) =>
                                             _confirmDelete(context),
                                         onDismissed: (direction) async {
-                                          await DatabaseHelper.instance
+                                          await DatabaseConfig.instance
                                               .deleteExpense(e.id!);
                                           _loadData();
                                         },

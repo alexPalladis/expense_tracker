@@ -73,7 +73,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
   }
 
   Future<void> _loadCategories() async {
-    final cats = await DatabaseHelper.instance.getAllCategories();
+    final cats = await DatabaseConfig.instance.getAllCategories();
     setState(() {
       _categories = cats;
       if (widget.existing != null && cats.isNotEmpty) {
@@ -166,9 +166,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
     );
 
     if (widget.existing == null) {
-      await DatabaseHelper.instance.insertExpense(expense);
+      await DatabaseConfig.instance.insertExpense(expense);
     } else {
-      await DatabaseHelper.instance.updateExpense(expense);
+      await DatabaseConfig.instance.updateExpense(expense);
     }
 
     if (mounted) {
