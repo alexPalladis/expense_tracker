@@ -81,8 +81,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
           (c) => c.id == widget.existing!.categoryId,
           orElse: () => cats.first,
         );
+      } else if (_selectedCategory != null && cats.isNotEmpty) {
+        final stillExists = cats.where((c) => c.id == _selectedCategory!.id);
+        _selectedCategory = stillExists.isNotEmpty ? stillExists.first : null;
       }
     });
+  }
+
+  Future<void> _openCategoriesScreen() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+    );
+    await _loadCategories();
   }
 
   Future<void> _getLocation() async {
@@ -180,8 +191,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
               const SizedBox(width: 10),
               Text(
                 widget.existing == null
-                    ? '✓ Το έξοδο αποθηκεύτηκε!'
-                    : '✓ Το έξοδο ενημερώθηκε!',
+                    ? 'Το έξοδο αποθηκεύτηκε!'
+                    : 'Το έξοδο ενημερώθηκε!',
                 style: const TextStyle(
                     color: Colors.white, fontWeight: FontWeight.w600),
               ),
@@ -235,8 +246,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide:
-            const BorderSide(color: Color(0xFF3949AB), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF3949AB), width: 2),
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -358,7 +368,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // ── Βασικά Στοιχεία ──
                   const SectionHeader(
                       title: 'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ',
@@ -374,7 +383,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                           onChanged: (_) => setState(() {}),
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w600),
-                          decoration: _inputDecoration('Ποσό (€) *', Icons.euro),
+                          decoration:
+                              _inputDecoration('Ποσό (€) *', Icons.euro),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -391,35 +401,55 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                   const SectionHeader(
                       title: 'ΚΑΤΗΓΟΡΙΑ', icon: Icons.label_outline),
                   _sectionCard(
-                    child: _categories.isEmpty
-                        ? ElevatedButton.icon(
+                    child: Column(
+                      children: [
+                        if (_categories.isEmpty)
+                          ElevatedButton.icon(
                             icon: const Icon(Icons.add),
                             label: const Text(
                                 'Δημιουργήστε μία κατηγορία πρώτα'),
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3949AB),
-                                foregroundColor: Colors.white),
-                            onPressed: () async {
-                              await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const CategoriesScreen()));
-                              _loadCategories();
-                            },
+                              backgroundColor: const Color(0xFF3949AB),
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: _openCategoriesScreen,
                           )
-                        : DropdownButtonFormField<Category>(
+                        else
+                          DropdownButtonFormField<Category>(
                             value: _selectedCategory,
                             decoration: _inputDecoration(
                                 'Επιλέξτε κατηγορία *',
                                 Icons.label_outline),
                             items: _categories
                                 .map((c) => DropdownMenuItem(
-                                    value: c, child: Text(c.name)))
+                                      value: c,
+                                      child: Text(c.name),
+                                    ))
                                 .toList(),
                             onChanged: (val) =>
                                 setState(() => _selectedCategory = val),
                           ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: const Text('Νέα κατηγορία'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF3949AB),
+                              side: const BorderSide(
+                                  color: Color(0xFF3949AB)),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: _openCategoriesScreen,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -546,7 +576,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                                 _loadingLocation
                                     ? 'Ανάκτηση τοποθεσίας...'
                                     : _latitude != null
-                                        ? 'Τοποθεσία ανακτήθηκε ✓'
+                                        ? 'Τοποθεσία ανακτήθηκε'
                                         : 'Ανάκτηση τοποθεσίας',
                                 style: const TextStyle(color: Colors.white),
                               ),
