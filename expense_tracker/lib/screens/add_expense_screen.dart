@@ -283,7 +283,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
       backgroundColor: const Color(0xFFF5F6FF),
       body: CustomScrollView(
         slivers: [
-          // ── Animated Gradient Header ──
           SliverAppBar(
             expandedHeight: 170,
             pinned: true,
@@ -312,7 +311,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        // Amount preview with glow
                         Container(
                           margin: const EdgeInsets.only(bottom: 20),
                           padding: const EdgeInsets.symmetric(
@@ -365,10 +363,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                 
                   const SectionHeader(
-                      title: 'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ',
-                      icon: Icons.edit_outlined),
+                    title: 'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ',
+                    icon: Icons.edit_outlined,
+                  ),
                   _sectionCard(
                     child: Column(
                       children: [
@@ -395,63 +393,75 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                   const SizedBox(height: 16),
 
                   const SectionHeader(
-                      title: 'ΚΑΤΗΓΟΡΙΑ', icon: Icons.label_outline),
+                    title: 'ΚΑΤΗΓΟΡΙΑ',
+                    icon: Icons.label_outline,
+                  ),
                   _sectionCard(
-                    child: Column(
-                      children: [
-                        if (_categories.isEmpty)
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.add),
-                            label: const Text(
-                                'Δημιουργήστε μία κατηγορία πρώτα'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3949AB),
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: _openCategoriesScreen,
-                          )
-                        else
-                          DropdownButtonFormField<Category>(
-                            value: _selectedCategory,
-                            decoration: _inputDecoration(
-                                'Επιλέξτε κατηγορία *',
-                                Icons.label_outline),
-                            items: _categories
-                                .map((c) => DropdownMenuItem(
-                                      value: c,
-                                      child: Text(c.name),
-                                    ))
-                                .toList(),
-                            onChanged: (val) =>
-                                setState(() => _selectedCategory = val),
-                          ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.add),
-                            label: const Text('Νέα κατηγορία'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF3949AB),
-                              side: const BorderSide(
-                                  color: Color(0xFF3949AB)),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                    child: _categories.isEmpty
+                        ? SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.add),
+                              label: const Text(
+                                  'Δημιουργήστε μία κατηγορία πρώτα'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3949AB),
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
+                              onPressed: _openCategoriesScreen,
                             ),
-                            onPressed: _openCategoriesScreen,
+                          )
+                        : Column(
+                            children: [
+                              DropdownButtonFormField<Category>(
+                                value: _selectedCategory,
+                                decoration: _inputDecoration(
+                                  'Επιλέξτε κατηγορία *',
+                                  Icons.label_outline,
+                                ),
+                                items: _categories
+                                    .map((c) => DropdownMenuItem(
+                                          value: c,
+                                          child: Text(c.name),
+                                        ))
+                                    .toList(),
+                                onChanged: (val) =>
+                                    setState(() => _selectedCategory = val),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Νέα κατηγορία'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF3949AB),
+                                    side: const BorderSide(
+                                      color: Color(0xFF3949AB),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: _openCategoriesScreen,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                   const SizedBox(height: 16),
 
                   const SectionHeader(
-                      title: 'ΗΜΕΡΟΜΗΝΙΑ',
-                      icon: Icons.calendar_today_outlined),
+                    title: 'ΗΜΕΡΟΜΗΝΙΑ',
+                    icon: Icons.calendar_today_outlined,
+                  ),
                   _sectionCard(
                     child: InkWell(
                       onTap: _pickDate,
@@ -484,18 +494,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Ημερομηνία & Ώρα',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey.shade500,
-                                          fontWeight: FontWeight.w500)),
+                                  Text(
+                                    'Ημερομηνία & Ώρα',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                   const SizedBox(height: 3),
                                   Text(
                                     '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}  ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 15,
-                                        color: Color(0xFF1A1A2E)),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                      color: Color(0xFF1A1A2E),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -507,11 +521,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                                 color: const Color(0xFF3949AB).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Text('Αλλαγή',
-                                  style: TextStyle(
-                                      color: Color(0xFF3949AB),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600)),
+                              child: const Text(
+                                'Αλλαγή',
+                                style: TextStyle(
+                                  color: Color(0xFF3949AB),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -521,13 +538,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                   const SizedBox(height: 16),
 
                   const SectionHeader(
-                      title: 'ΤΟΠΟΘΕΣΙΑ',
-                      icon: Icons.place_outlined),
+                    title: 'ΤΟΠΟΘΕΣΙΑ',
+                    icon: Icons.place_outlined,
+                  ),
                   _sectionCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Location button
                         SizedBox(
                           width: double.infinity,
                           child: AnimatedContainer(
@@ -560,12 +577,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                                       width: 18,
                                       height: 18,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white))
-                                  : Icon(_latitude != null
-                                      ? Icons.location_on
-                                      : Icons.my_location,
-                                      color: Colors.white),
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(
+                                      _latitude != null
+                                          ? Icons.location_on
+                                          : Icons.my_location,
+                                      color: Colors.white,
+                                    ),
                               label: Text(
                                 _loadingLocation
                                     ? 'Ανάκτηση τοποθεσίας...'
@@ -577,10 +598,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 14),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onPressed:
                                   _loadingLocation ? null : _getLocation,
@@ -600,16 +622,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.gps_fixed,
-                                    size: 14,
-                                    color: Colors.green.shade600),
+                                Icon(
+                                  Icons.gps_fixed,
+                                  size: 14,
+                                  color: Colors.green.shade600,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Lat: ${_latitude!.toStringAsFixed(4)},  Lng: ${_longitude!.toStringAsFixed(4)}',
                                   style: TextStyle(
-                                      color: Colors.green.shade700,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500),
+                                    color: Colors.green.shade700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ],
                             ),
@@ -618,8 +643,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                           TextField(
                             controller: _locationNameController,
                             decoration: _inputDecoration(
-                                'Ονομασία τοποθεσίας (προαιρετική)',
-                                Icons.place),
+                              'Ονομασία τοποθεσίας (προαιρετική)',
+                              Icons.place,
+                            ),
                           ),
                         ],
                       ],
@@ -643,22 +669,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                       ],
                     ),
                     child: ElevatedButton.icon(
-                      icon: Icon(isEdit ? Icons.check : Icons.save,
-                          color: Colors.white),
+                      icon: Icon(
+                        isEdit ? Icons.check : Icons.save,
+                        color: Colors.white,
+                      ),
                       label: Text(
                         isEdit ? 'Ενημέρωση' : 'Αποθήκευση',
                         style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       onPressed: _save,
                     ),
