@@ -35,7 +35,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
   void initState() {
     super.initState();
 
-    // Animated gradient header
     _headerController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -228,7 +227,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
     );
   }
 
-  // Filled style input decoration
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
@@ -253,7 +251,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
     );
   }
 
-  // Section card wrapper
   Widget _sectionCard({required Widget child}) {
     return Container(
       width: double.infinity,
@@ -368,7 +365,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Βασικά Στοιχεία ──
+                 
                   const SectionHeader(
                       title: 'ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ',
                       icon: Icons.edit_outlined),
@@ -397,7 +394,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Κατηγορία ──
                   const SectionHeader(
                       title: 'ΚΑΤΗΓΟΡΙΑ', icon: Icons.label_outline),
                   _sectionCard(
@@ -453,7 +449,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Ημερομηνία ──
                   const SectionHeader(
                       title: 'ΗΜΕΡΟΜΗΝΙΑ',
                       icon: Icons.calendar_today_outlined),
@@ -525,7 +520,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Τοποθεσία ──
                   const SectionHeader(
                       title: 'ΤΟΠΟΘΕΣΙΑ',
                       icon: Icons.place_outlined),
@@ -633,7 +627,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen>
                   ),
                   const SizedBox(height: 28),
 
-                  // ── Save Button ──
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
