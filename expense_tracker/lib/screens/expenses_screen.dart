@@ -61,6 +61,28 @@ class _ExpensesScreenState extends State<ExpensesScreen>
     _fabController.forward(from: 0);
   }
 
+  void _showSuccessSnackBar(String message, {bool isDelete = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(children: [
+          const Icon(Icons.check_circle, color: Colors.white, size: 20),
+          const SizedBox(width: 8),
+          Text(message,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w600)),
+        ]),
+        backgroundColor:
+            isDelete ? Colors.red.shade600 : Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   String _categoryName(int id) {
     try {
       return _categories.firstWhere((c) => c.id == id).name;
@@ -157,8 +179,7 @@ class _ExpensesScreenState extends State<ExpensesScreen>
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon,
-            color:
-                isSelected ? Colors.white : const Color(0xFF3949AB),
+            color: isSelected ? Colors.white : const Color(0xFF3949AB),
             size: 20),
       ),
       title: Text(title,
@@ -224,7 +245,6 @@ class _ExpensesScreenState extends State<ExpensesScreen>
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Gradient header
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -356,6 +376,9 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                           await DatabaseConfig.instance
                               .deleteExpense(expense.id!);
                           _loadData();
+                          _showSuccessSnackBar(
+                              'Το έξοδο διαγράφηκε!',
+                              isDelete: true);
                         }
                       },
                     ),
@@ -422,7 +445,8 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                     _selectedCategoryId = isSelected ? null : cat.id),
                 selectedColor: const Color(0xFF3949AB),
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey.shade700,
+                  color:
+                      isSelected ? Colors.white : Colors.grey.shade700,
                   fontWeight:
                       isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -543,14 +567,14 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                             itemBuilder: (ctx, groupIndex) {
                               final dayKey = keys[groupIndex];
                               final dayExpenses = grouped[dayKey]!;
-                              final dayTotal = dayExpenses.fold<double>(
-                                  0, (sum, e) => sum + e.amount);
+                              final dayTotal =
+                                  dayExpenses.fold<double>(
+                                      0, (sum, e) => sum + e.amount);
 
                               return Column(
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
                                 children: [
-                                  // Day header with dividers
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(
                                         16, 12, 16, 8),
@@ -588,76 +612,91 @@ class _ExpensesScreenState extends State<ExpensesScreen>
                                       ],
                                     ),
                                   ),
-                                  ...dayExpenses.asMap().entries.map((entry) {
-                                    final e = entry.value;
-                                    final globalIndex =
-                                        allExpenses.indexOf(e);
-                                    final delay = Duration(
-                                        milliseconds:
-                                            50 * globalIndex.clamp(0, 20));
-                                    final style = getCategoryStyle(
-                                        _categoryName(e.categoryId));
+                                  ...dayExpenses.asMap().entries.map(
+                                    (entry) {
+                                      final e = entry.value;
+                                      final globalIndex =
+                                          allExpenses.indexOf(e);
+                                      final delay = Duration(
+                                          milliseconds: 50 *
+                                              globalIndex.clamp(0, 20));
+                                      final style = getCategoryStyle(
+                                          _categoryName(e.categoryId));
 
-                                    return AnimatedListCard(
-                                      key: Key(e.id.toString()),
-                                      delay: delay,
-                                      child: Dismissible(
-                                        key: ValueKey('${e.id}_dismiss'),
-                                        direction:
-                                            DismissDirection.endToStart,
-                                        confirmDismiss: (direction) =>
-                                            _confirmDelete(context),
-                                        onDismissed: (direction) async {
-                                          await DatabaseConfig.instance
-                                              .deleteExpense(e.id!);
-                                          _loadData();
-                                        },
-                                        background: Container(
-                                          margin: const EdgeInsets.fromLTRB(
-                                              16, 0, 16, 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius:
-                                                BorderRadius.circular(14),
+                                      return AnimatedListCard(
+                                        key: Key(e.id.toString()),
+                                        delay: delay,
+                                        child: Dismissible(
+                                          key: ValueKey(
+                                              '${e.id}_dismiss'),
+                                          direction:
+                                              DismissDirection.endToStart,
+                                          confirmDismiss: (direction) =>
+                                              _confirmDelete(context),
+                                          onDismissed:
+                                              (direction) async {
+                                            await DatabaseConfig.instance
+                                                .deleteExpense(e.id!);
+                                            _loadData();
+                                            _showSuccessSnackBar(
+                                                'Το έξοδο διαγράφηκε!',
+                                                isDelete: true);
+                                          },
+                                          background: Container(
+                                            margin:
+                                                const EdgeInsets.fromLTRB(
+                                                    16, 0, 16, 8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      14),
+                                            ),
+                                            alignment:
+                                                Alignment.centerRight,
+                                            padding:
+                                                const EdgeInsets.only(
+                                                    right: 20),
+                                            child: const Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .center,
+                                              children: [
+                                                Icon(Icons.delete,
+                                                    color: Colors.white,
+                                                    size: 26),
+                                                SizedBox(height: 4),
+                                                Text('Διαγραφή',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Colors.white,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight
+                                                                .bold)),
+                                              ],
+                                            ),
                                           ),
-                                          alignment: Alignment.centerRight,
-                                          padding: const EdgeInsets.only(
-                                              right: 20),
-                                          child: const Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.delete,
-                                                  color: Colors.white,
-                                                  size: 26),
-                                              SizedBox(height: 4),
-                                              Text('Διαγραφή',
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.bold)),
-                                            ],
+                                          child: Padding(
+                                            padding:
+                                                const EdgeInsets.fromLTRB(
+                                                    16, 0, 16, 8),
+                                            child: ExpenseCard(
+                                              title: e.description ??
+                                                  _categoryName(
+                                                      e.categoryId),
+                                              subtitle: _categoryName(
+                                                  e.categoryId),
+                                              amount:
+                                                  '€${e.amount.toStringAsFixed(2)}',
+                                              style: style,
+                                              onTap: () => _showDetail(e),
+                                            ),
                                           ),
                                         ),
-                                        child: Padding(
-                                          padding:
-                                              const EdgeInsets.fromLTRB(
-                                                  16, 0, 16, 8),
-                                          child: ExpenseCard(
-                                            title: e.description ??
-                                                _categoryName(e.categoryId),
-                                            subtitle: _categoryName(
-                                                e.categoryId),
-                                            amount:
-                                                '€${e.amount.toStringAsFixed(2)}',
-                                            style: style,
-                                            onTap: () => _showDetail(e),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
+                                      );
+                                    },
+                                  ),
                                 ],
                               );
                             },

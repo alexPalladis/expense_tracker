@@ -47,6 +47,34 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     });
   }
 
+  void _showSnackBar(String message, {bool isError = false, bool isDelete = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle,
+            color: Colors.white,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Text(message,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w600)),
+        ]),
+        backgroundColor: isError
+            ? Colors.red.shade600
+            : isDelete
+                ? Colors.red.shade600
+                : Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   void _showCategoryDialog({Category? existing}) {
     final nameController =
         TextEditingController(text: existing?.name ?? '');
@@ -72,7 +100,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag handle
               Center(
                 child: Container(
                   width: 40,
@@ -84,7 +111,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   ),
                 ),
               ),
-              // Gradient icon + title
               Row(
                 children: [
                   Container(
@@ -112,7 +138,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              // Name field
               TextField(
                 controller: nameController,
                 autofocus: true,
@@ -138,7 +163,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              // Description field
               TextField(
                 controller: descController,
                 decoration: InputDecoration(
@@ -163,7 +187,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Buttons
               Row(
                 children: [
                   Expanded(
@@ -172,8 +195,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       style: OutlinedButton.styleFrom(
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
-                        side:
-                            BorderSide(color: Colors.grey.shade300),
+                        side: BorderSide(color: Colors.grey.shade300),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
@@ -186,16 +208,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF3949AB),
-                            Color(0xFF1E88E5)
-                          ],
+                          colors: [Color(0xFF3949AB), Color(0xFF1E88E5)],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF3949AB)
-                                .withOpacity(0.35),
+                            color: const Color(0xFF3949AB).withOpacity(0.35),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           )
@@ -205,8 +223,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
@@ -219,14 +237,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                     color: Colors.white, size: 18),
                                 SizedBox(width: 8),
                                 Text('Η ονομασία είναι υποχρεωτική',
-                                    style: TextStyle(
-                                        color: Colors.white)),
+                                    style:
+                                        TextStyle(color: Colors.white)),
                               ]),
                               backgroundColor: Colors.red.shade600,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12)),
                               margin: const EdgeInsets.all(16),
                             ));
                             return;
@@ -248,6 +265,27 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           }
                           Navigator.pop(ctx);
                           _loadCategories();
+                          messenger.showSnackBar(SnackBar(
+                            content: Row(children: [
+                              const Icon(Icons.check_circle,
+                                  color: Colors.white, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                existing == null
+                                    ? 'Η κατηγορία δημιουργήθηκε!'
+                                    : 'Η κατηγορία ενημερώθηκε!',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ]),
+                            backgroundColor: Colors.green.shade600,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.all(16),
+                            duration: const Duration(seconds: 2),
+                          ));
                         },
                         child: Text(
                           existing == null ? 'Προσθήκη' : 'Αποθήκευση',
@@ -340,6 +378,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       }
       await DatabaseConfig.instance.deleteCategory(category.id!);
       _loadCategories();
+      if (mounted) {
+        _showSnackBar('Η κατηγορία διαγράφηκε!', isDelete: true);
+      }
     }
   }
 
@@ -408,8 +449,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   children: [
                     if (_showHint)
                       Container(
-                        margin:
-                            const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                        margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
@@ -452,8 +492,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           final style = getCategoryStyle(cat.name);
                           final count = _expenseCount[cat.id] ?? 0;
                           final total = _expenseTotal[cat.id] ?? 0.0;
-                          final delay = Duration(
-                              milliseconds: 60 * i.clamp(0, 15));
+                          final delay =
+                              Duration(milliseconds: 60 * i.clamp(0, 15));
 
                           return AnimatedListCard(
                             key: Key(cat.id.toString()),
@@ -463,15 +503,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               secondaryBackground: Container(
                                 decoration: BoxDecoration(
                                   color: Colors.red,
-                                  borderRadius:
-                                      BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 alignment: Alignment.centerRight,
-                                padding:
-                                    const EdgeInsets.only(right: 20),
+                                padding: const EdgeInsets.only(right: 20),
                                 child: const Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.delete,
                                         color: Colors.white, size: 26),
@@ -480,23 +517,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 11,
-                                            fontWeight:
-                                                FontWeight.bold)),
+                                            fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ),
                               background: Container(
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF3949AB),
-                                  borderRadius:
-                                      BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 alignment: Alignment.centerLeft,
-                                padding:
-                                    const EdgeInsets.only(left: 20),
+                                padding: const EdgeInsets.only(left: 20),
                                 child: const Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.edit,
                                         color: Colors.white, size: 26),
@@ -505,8 +538,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 11,
-                                            fontWeight:
-                                                FontWeight.bold)),
+                                            fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ),
@@ -524,8 +556,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: style.color.withOpacity(0.3),
-                                  borderRadius:
-                                      BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
                                       color: style.color, width: 1.5),
                                 ),
